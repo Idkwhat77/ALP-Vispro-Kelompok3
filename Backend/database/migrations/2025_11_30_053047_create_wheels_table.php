@@ -13,12 +13,10 @@ return new class extends Migration
     {
         Schema::create('wheels', function (Blueprint $table) {
             $table->integer('id_wheel')->primary();
-            $table->foreignId('classes_id')->constrained(
-                table: 'classes',
-                column: 'classes_id'
-            );
+            $table->integer('classes_id');
+            $table->foreign('classes_id')->references('classes_id')->on('classes');
             $table->string('result');
-            $table->timestamps("created_at");
+            $table->timestamps();
         });
     }
 

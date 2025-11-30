@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('students', function (Blueprint $table) {
-            $table->integer('id_students')->primary();
-            $table->integer('classes_id');
-            $table->foreign('classes_id')->references('classes_id')->on('classes');
-            $table->string('student_name');
+        Schema::create('charades_words', function (Blueprint $table) {
+            $table->integer('id')->primary();
+            $table->integer('charades_themes_id');
+            $table->foreign('charades_themes_id')->references('id')->on('charades_themes');
+            $table->string('word');
             $table->timestamps();
         });
     }
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('students');
+        Schema::dropIfExists('charades_words');
     }
 };

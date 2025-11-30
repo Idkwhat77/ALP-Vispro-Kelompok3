@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule; 
 
-class studentController extends Controller
+class StudentController extends Controller
 {
     /**
      * Display a listing of the resource.
