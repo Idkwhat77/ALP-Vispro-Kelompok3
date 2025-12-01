@@ -30,28 +30,87 @@ class MainScaffold extends StatelessWidget {
 
         height: 75,
         items: [
+          // History
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
               Icon(
                 Icons.history,
                 size: 28,
                 color: currentRoute.startsWith('/history')
                     ? Colors.white
-                    : Colors.white,
+                    : Colors.white70,
               ),
+              const SizedBox(height: 3),
+              Visibility(
+                visible: !currentRoute.startsWith('/history'),
+                child: Text(
+                  'History',
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 12,
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // Tools
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
               Icon(
                 Icons.extension,
                 size: 28,
                 color: currentRoute.startsWith('/tools')
                     ? Colors.white
-                    : Colors.white,
+                    : Colors.white70,
               ),
+              const SizedBox(height: 3),
+              Visibility(
+                visible: !currentRoute.startsWith('/tools'),
+                child: Text(
+                  'Tools',
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 12,
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // Students
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
               Icon(
                 Icons.people,
                 size: 28,
                 color: currentRoute.startsWith('/students')
                     ? Colors.white
-                    : Colors.white,
+                    : Colors.white70,
+              ),
+              const SizedBox(height: 3),
+              Visibility(
+                visible: !currentRoute.startsWith('/students'),
+                child: Text(
+                  'Students',
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 12,
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
+          ),
+        ],
         onTap: (index) {
           switch (index) {
             case 0:
