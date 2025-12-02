@@ -3,21 +3,29 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class teacher extends Model
+class Teacher extends Model
 {
     protected $fillable = [
-    "teacher_id", 
-    "username", 
-    "email", 
-    "password",
-];
+        "username", 
+        "email", 
+        "password",
+    ];
 
     protected $primaryKey = 'teacher_id';
-    public $incrementing = false;
+    public $incrementing = true;
     protected $keyType = 'integer';
 
+    public function classes(): HasMany
+    {
+        return $this->hasMany(Classes::class, 'teacher_id', 'teacher_id');
+    }
+
+    public function charadesThemes(): HasMany
+    {
+        return $this->hasMany(CharadesThemes::class, 'teacher_id', 'teacher_id');
+    }
 }
 
 

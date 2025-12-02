@@ -2,21 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\classes;
+use App\Models\Classes;
 use App\Http\Controllers\Controller;
 use Illuminate\Container\Attributes\Log;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule; 
 
-class classesController extends Controller
+class ClassesController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index(): JsonResponse
     {
-        $classes = classes::all();
+        $classes = Classes::all();
         return response()->json([
             'success' => true,
             'data' => $classes,
@@ -30,29 +30,19 @@ class classesController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'classes_id' => 'required|integer|unique:classes',
             'teacher_id' => 'required|exists:teachers,teacher_id|integer',
             'class_name' => 'required|string|max:255',
         ]);
 
-        $classes = classes::create($validated);
+        $classes = Classes::create($validated);
         return response()->json(["message" => "Kelas telah dibuat", "data" => $classes], 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show($id): JsonResponse
+    public function show(Classes $class): JsonResponse
     {
-        $class = classes::find($id);
-
-        if (!$class) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Class not found.'
-            ], 404);
-        }
-
         return response()->json([
             'success' => true,
             'data' => $class,
@@ -60,28 +50,26 @@ class classesController extends Controller
         ]);
     }
 
-
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, classes $classes)
+    public function update(Request $request, Classes $class): JsonResponse
     {
         $validated = $request->validate([
-            'classes_id' => 'sometimes|integer|unique:classes',
             'teacher_id' => 'sometimes|exists:teachers,teacher_id|integer',
             'class_name' => 'sometimes|string|max:255',
         ]);
 
-        $classes->update($validated);
-        return response()->json(["message" => "Kelas telah diperbarui", "data" => $classes], 201);
+        $class->update($validated);
+        return response()->json(["message" => "Kelas telah diperbarui", "data" => $class], 200);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(classes $classes)
+    public function destroy(Classes $class): JsonResponse
     {
-        $classes->delete();
-        return response()->json( null, 204);
+        $class->delete();
+        return response()->json(null, 204);
     }
 }

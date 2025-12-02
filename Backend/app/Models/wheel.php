@@ -3,23 +3,26 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class wheel extends Model
+class Wheel extends Model
 {
     protected $fillable = [
-    "id_wheel", 
-    "classes_id", 
-    "result",
-];
-
-public function wheel_to_classes(): HasMany
-{
-    return $this->hasMany(classes::class,'classes_id');
-}
+        "classes_id", 
+        "result",
+    ];
 
     protected $primaryKey = 'id_wheel';
-    public $incrementing = false;
+    public $incrementing = true;
     protected $keyType = 'integer';
-}
 
+    public function histories(): HasMany
+    {
+        return $this->hasMany(History::class, 'wheel_id', 'id_wheel');
+    }
+    public function class(): BelongsTo
+    {
+        return $this->belongsTo(Classes::class, 'classes_id', 'classes_id');
+    }
+}
