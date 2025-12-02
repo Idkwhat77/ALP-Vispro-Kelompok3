@@ -82,7 +82,19 @@ class GameSessionController extends Controller
      */
     public function destroy(GameSession $gameSession): JsonResponse
     {
-        $gameSession->delete();
-        return response()->json(null, 204);
+        try {
+            // Delete related game session words first
+            $gameSession->gameSessionWords()->delete();
+            
+            // Delete related history records
+            $gameSession->histories()->delete();
+            
+            // Now delete the game session
+            $gameSession->delete();
+            
+            return response()->json(null, 204);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to delete game session due to related records'], 500);
+        }
     }
 }

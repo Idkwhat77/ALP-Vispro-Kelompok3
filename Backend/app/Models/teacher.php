@@ -30,6 +30,11 @@ class Teacher extends Authenticatable
     {
         return $this->hasMany(CharadesThemes::class, 'teacher_id', 'teacher_id');
     }
+
+    public function gameSessions(): HasMany
+    {
+        return $this->hasMany(GameSession::class, 'teacher_id', 'teacher_id');
+    }
 }
 
 

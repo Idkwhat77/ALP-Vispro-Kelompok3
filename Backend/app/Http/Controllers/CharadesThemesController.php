@@ -74,7 +74,26 @@ class CharadesThemesController extends Controller
      */
     public function destroy(CharadesThemes $charadesTheme): JsonResponse
     {
-        $charadesTheme->delete();
-        return response()->json(null, 204);
+        try {
+            // Delete related game sessions and their dependent records first
+            foreach ($charadesTheme->gameSessions as $gameSession) {
+                $gameSession->gameSessionWords()->delete();
+                $gameSession->histories()->delete();
+                $gameSession->delete();
+            }
+            
+            // Delete related charades words and their references
+            foreach ($charadesTheme->charadesWords as $word) {
+                \App\Models\GameSessionWords::where('charades_words_id', $word->id_charades_words)->delete();
+                $word->delete();
+            }
+            
+            // Now delete the charades theme
+            $charadesTheme->delete();
+            
+            return response()->json(null, 204);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to delete charades theme due to related records'], 500);
+        }
     }
 }

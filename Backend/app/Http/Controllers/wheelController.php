@@ -68,7 +68,16 @@ class WheelController extends Controller
      */
     public function destroy(Wheel $wheel): JsonResponse
     {
-        $wheel->delete();
-        return response()->json(null, 204);
+        try {
+            // Delete related history records first
+            $wheel->histories()->delete();
+            
+            // Now delete the wheel
+            $wheel->delete();
+            
+            return response()->json(null, 204);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to delete wheel due to related records'], 500);
+        }
     }
 }
