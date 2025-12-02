@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../bloc/toolset_bloc.dart';
 import '../../bloc/toolset_event.dart';
@@ -106,6 +107,13 @@ class _ToolsetPageState extends State<ToolsetPage> {
                             context.read<ToolsetBloc>().add(
                                   SelectToolsetEvent(toolset),
                                 );
+
+                            if (toolset.name == "SpinWheel") {
+                            context.go('/spinwheel');
+                          }
+                            else if (toolset.name == "Charades") {
+                            // context.go('/charades'); // nanti kalau ada
+                          }
                           },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 250),
