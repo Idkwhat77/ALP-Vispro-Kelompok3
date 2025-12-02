@@ -69,7 +69,29 @@ class ClassesController extends Controller
      */
     public function destroy(Classes $class): JsonResponse
     {
-        $class->delete();
-        return response()->json(null, 204);
+        try {
+            // Delete related students first
+            $class->students()->delete();
+            
+            // Delete related wheels and their history records
+            foreach ($class->wheels as $wheel) {
+                $wheel->histories()->delete();
+                $wheel->delete();
+            }
+            
+            // Delete related game sessions and their dependent records
+            foreach ($class->gameSessions as $gameSession) {
+                $gameSession->gameSessionWords()->delete();
+                $gameSession->histories()->delete();
+                $gameSession->delete();
+            }
+            
+            // Now delete the class
+            $class->delete();
+            
+            return response()->json(null, 204);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to delete class due to related records'], 500);
+        }
     }
 }

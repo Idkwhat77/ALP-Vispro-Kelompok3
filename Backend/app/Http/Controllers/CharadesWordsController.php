@@ -74,7 +74,16 @@ class CharadesWordsController extends Controller
      */
     public function destroy(CharadesWords $charadesWord): JsonResponse
     {
-        $charadesWord->delete();
-        return response()->json(null, 204);
+        try {
+            // Delete GameSessionWords that reference this charades word
+            \App\Models\GameSessionWords::where('charades_words_id', $charadesWord->id_charades_words)->delete();
+            
+            // Now delete the charades word
+            $charadesWord->delete();
+            
+            return response()->json(null, 204);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to delete charades word due to related records'], 500);
+        }
     }
 }

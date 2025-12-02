@@ -28,6 +28,11 @@ class Classes extends Model
         return $this->hasMany(Wheel::class, 'classes_id', 'classes_id');
     }
 
+    public function gameSessions(): HasMany
+    {
+        return $this->hasMany(GameSession::class, 'class_id', 'classes_id');
+    }
+
     protected $primaryKey = 'classes_id';
     public $incrementing = true;
     protected $keyType = 'integer';
