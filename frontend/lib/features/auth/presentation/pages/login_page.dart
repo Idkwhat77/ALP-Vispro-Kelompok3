@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../bloc/login_bloc.dart';
 import '../../bloc/login_event.dart';
 import '../../bloc/login_state.dart';
+import '../widgets/password_text_field.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -121,12 +122,12 @@ class LoginPage extends StatelessWidget {
                                 },
                                 decoration: const InputDecoration(
                                   border: InputBorder.none,
-                                  hintText: "guru@gmail.com",
+                                  hintText: "Masukkan Alamat Email",
                                   hintStyle:
                                       TextStyle(fontFamily: 'Poppins'),
                                   contentPadding: EdgeInsets.symmetric(
                                     horizontal: 14,
-                                    vertical: 10,
+                                    vertical: 14,
                                   ),
                                 ),
                                 style:
@@ -147,46 +148,19 @@ class LoginPage extends StatelessWidget {
                             ),
 
                             // Password Input
-                            Container(
-                              width: 343,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                border: Border.all(width: 1),
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                              child: TextField(
-                                obscureText: true,
-                                onChanged: (value) {
-                                  context.read<LoginBloc>().add(
-                                        PasswordChanged(value),
-                                      );
-                                },
-                                decoration: const InputDecoration(
-                                  border: InputBorder.none,
-                                  hintText: "Password",
-                                  hintStyle:
-                                      TextStyle(fontFamily: 'Poppins'),
-                                  contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 10,
-                                  ),
-                                ),
-                                style:
-                                    const TextStyle(fontFamily: 'Poppins'),
-                              ),
+                            PasswordTextField(
+                              onChanged: (value) {
+                                context.read<LoginBloc>().add(PasswordChanged(value));
+                              },
                             ),
-
                             const SizedBox(height: 22),
                           ],
                         ),
-
                         const SizedBox(height: 16),
-
-                        const Text(
+                        Text(
                           'Lupa Password?',
                           style: TextStyle(
-                            color: Colors.black,
+                            color: Colors.grey[600],
                             fontSize: 14,
                             fontFamily: 'Poppins',
                             fontWeight: FontWeight.w500,
@@ -261,6 +235,7 @@ class LoginPage extends StatelessWidget {
                     ),
                    ),
                   ),
+
                   // LOGIN GOOGLE BUTTON
                   Positioned(
                     left: 34,
