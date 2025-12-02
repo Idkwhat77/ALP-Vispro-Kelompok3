@@ -4,17 +4,24 @@ namespace App\Http\Controllers;
 
 use App\Models\classes;
 use App\Http\Controllers\Controller;
+use Illuminate\Container\Attributes\Log;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule; 
 
-class ClassesController extends Controller
+class classesController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): JsonResponse
     {
-        return response()->json(classes::all());
+        $classes = classes::all();
+        return response()->json([
+            'success' => true,
+            'data' => $classes,
+            'message' => 'Classes retrieved successfully.'
+        ]);
     }
 
     /**
@@ -35,10 +42,24 @@ class ClassesController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(classes $classes)
+    public function show($id): JsonResponse
     {
-        return response()->json($classes);
+        $class = classes::find($id);
+
+        if (!$class) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Class not found.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $class,
+            'message' => 'Class retrieved successfully.'
+        ]);
     }
+
 
     /**
      * Update the specified resource in storage.

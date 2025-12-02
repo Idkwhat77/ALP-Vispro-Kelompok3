@@ -12,11 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('history', function (Blueprint $table) {
-            $table->integer('id')->primary();
-            $table->integer('game_session_id');
-            $table->integer('wheel_id');
-            $table->foreign('game_session_id')->references('id')->on('game_sessions');
-            $table->foreign('wheel_id')->references('id_wheel')->on('wheels');
+            $table->id('id_history');
+            $table->foreignId('id_game_session')->constrained('game_sessions', 'id_game_sessions');
+            $table->foreignId('wheel_id')->constrained('wheels', 'id_wheel');
             $table->timestamps();
         });
     }

@@ -12,13 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('game_sessions', function (Blueprint $table) {
-            $table->integer('id')->primary();
-            $table->integer('class_id');
-            $table->integer('teacher_id');
-            $table->integer('charades_theme_id');
-            $table->foreign('class_id')->references('classes_id')->on('classes');
-            $table->foreign('teacher_id')->references('teacher_id')->on('teachers');
-            $table->foreign('charades_theme_id')->references('id')->on('charades_themes');
+            $table->id('id_game_sessions');
+            $table->foreignId('class_id')->constrained('classes', 'classes_id');
+            $table->foreignId('teacher_id')->constrained('teachers', 'teacher_id');
+            $table->foreignId('charades_theme_id')->constrained('charades_themes', 'id_charades_themes');
             $table->timestamp('played_at');
             $table->integer('total_guess_correct');
             $table->integer('total_guess_skipped');

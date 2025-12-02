@@ -12,9 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('wheels', function (Blueprint $table) {
-            $table->integer('id_wheel')->primary();
-            $table->integer('classes_id');
-            $table->foreign('classes_id')->references('classes_id')->on('classes');
+            $table->id('id_wheel');
+            $table->foreignId('classes_id')->constrained('classes', 'classes_id');
             $table->string('result');
             $table->timestamps();
         });

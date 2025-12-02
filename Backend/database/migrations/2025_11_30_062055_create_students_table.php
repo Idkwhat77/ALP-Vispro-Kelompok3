@@ -12,9 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('students', function (Blueprint $table) {
-            $table->integer('id_students')->primary();
-            $table->integer('classes_id');
-            $table->foreign('classes_id')->references('classes_id')->on('classes');
+            $table->id('id_students');
+            $table->foreignId('classes_id')->constrained('classes', 'classes_id');
             $table->string('student_name');
             $table->timestamps();
         });
