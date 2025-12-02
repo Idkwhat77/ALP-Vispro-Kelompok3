@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/features/auth/bloc/login_bloc.dart';
+import 'package:frontend/features/spinwheel/blocs/spinwheel_bloc.dart';
+import 'package:frontend/features/spinwheel/presentation/pages/spinwheel_page.dart';
 import 'package:go_router/go_router.dart';
 
 import '../widgets/main_scaffold.dart';
@@ -42,6 +44,16 @@ final GoRouter appRouter = GoRouter(
           builder: (context, state) => const StudentDataPage(),
         ),
       ],
+    ),
+
+    GoRoute(
+      path: '/spinwheel',
+      builder: (context, state) {
+        return BlocProvider(
+          create: (_) => SpinwheelBloc(),
+          child: const SpinwheelPage(),
+        );
+      },
     ),
   ],
 );
