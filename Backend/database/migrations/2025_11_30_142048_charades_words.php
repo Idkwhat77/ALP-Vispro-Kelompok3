@@ -12,9 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('charades_words', function (Blueprint $table) {
-            $table->integer('id')->primary();
-            $table->integer('charades_themes_id');
-            $table->foreign('charades_themes_id')->references('id')->on('charades_themes');
+            $table->id('id_charades_words');
+            $table->foreignId('charades_themes_id')->constrained('charades_themes', 'id_charades_themes');
             $table->string('word');
             $table->timestamps();
         });

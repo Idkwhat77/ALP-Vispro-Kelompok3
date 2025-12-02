@@ -12,9 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('charades_themes', function (Blueprint $table) {
-            $table->integer('id')->primary();
-            $table->integer('teacher_id');
-            $table->foreign('teacher_id')->references('teacher_id')->on('teachers');
+            $table->id('id_charades_themes');
+            $table->foreignId('teacher_id')->constrained('teachers', 'teacher_id');
             $table->string('name');
             $table->timestamps();
         });

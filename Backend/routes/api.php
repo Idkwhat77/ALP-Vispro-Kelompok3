@@ -9,9 +9,16 @@ use App\Http\Controllers\studentController;
 
 
 Route::apiResource('teachers', teacherController::class);
-Route::apiResource('classes', classesController::class);
+Route::prefix('classes')->group(function () {
+    Route::get('/', [classesController::class, 'index']);
+    Route::post('/', [classesController::class, 'store']);
+    Route::get('/{id}', [classesController::class, 'show']);
+    Route::put('/{id}', [classesController::class, 'update']);
+    Route::delete('/{id}', [classesController::class, 'destroy']);
+});
 Route::apiResource('wheels', wheelController::class);
 Route::apiResource('students', studentController::class);
+
 
 Route::get('/user', function (Request $request) {
     return $request->user();
