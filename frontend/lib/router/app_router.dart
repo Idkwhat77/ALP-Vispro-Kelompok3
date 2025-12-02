@@ -1,12 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:frontend/features/auth/presentation/bloc/login_bloc.dart';
+import 'package:frontend/features/auth/bloc/login_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../widgets/main_scaffold.dart';
 import '../features/auth/presentation/pages/login_page.dart';
-import '../features/home/presentation/pages/history_page.dart';
-import '../features/home/presentation/pages/toolset_page.dart';
-import '../features/home/presentation/pages/student_data_page.dart';
+import '../features/home/history/presentation/pages/history_page.dart';
+import '../features/home/toolset/presentation/pages/toolset_page.dart';
+import '../features/home/student_data/presentation/pages/student_data_page.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/login',

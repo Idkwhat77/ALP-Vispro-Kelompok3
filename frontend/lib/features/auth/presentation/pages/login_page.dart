@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import '../bloc/login_bloc.dart';
-import '../bloc/login_event.dart';
-import '../bloc/login_state.dart';
+import '../../bloc/login_bloc.dart';
+import '../../bloc/login_event.dart';
+import '../../bloc/login_state.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});

@@ -6,6 +6,10 @@ void main() {
     MaterialApp.router(
       debugShowCheckedModeBanner: false,
       routerConfig: appRouter,
+
+      theme: ThemeData(
+        fontFamily: 'Poppins',
+      ),
     ),
   );
 }
