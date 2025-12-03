@@ -14,8 +14,26 @@ class ClassesController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
+        
+        if ($user) {
+            // If authenticated, show teacher's own classes first, then others (view-only)
+            $ownClasses = Classes::where('teacher_id', $user->teacher_id)->get();
+            $otherClasses = Classes::where('teacher_id', '!=', $user->teacher_id)->get();
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'own_classes' => $ownClasses,
+                    'other_classes' => $otherClasses
+                ],
+                'message' => 'Classes retrieved successfully.'
+            ]);
+        }
+        
+        // If not authenticated, show all (for API usage)
         $classes = Classes::all();
         return response()->json([
             'success' => true,
@@ -29,13 +47,37 @@ class ClassesController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'teacher_id' => 'required|exists:teachers,teacher_id|integer',
+        $request->validate([
             'class_name' => 'required|string|max:255',
+            'teacher_id' => 'sometimes|exists:teachers,teacher_id'
         ]);
-
-        $classes = Classes::create($validated);
-        return response()->json(["message" => "Kelas telah dibuat", "data" => $classes], 201);
+        
+        $user = $request->user();
+        
+        // If authenticated, use the authenticated teacher's ID
+        if ($user) {
+            $teacherId = $user->teacher_id;
+        } else {
+            // If not authenticated, require teacher_id in request (for API usage)
+            $teacherId = $request->teacher_id;
+            if (!$teacherId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'teacher_id is required when not authenticated'
+                ], 400);
+            }
+        }
+        
+        $class = Classes::create([
+            'teacher_id' => $teacherId,
+            'class_name' => $request->class_name
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $class,
+            'message' => 'Class created successfully'
+        ], 201);
     }
 
     /**
@@ -55,20 +97,44 @@ class ClassesController extends Controller
      */
     public function update(Request $request, Classes $class): JsonResponse
     {
-        $validated = $request->validate([
-            'teacher_id' => 'sometimes|exists:teachers,teacher_id|integer',
-            'class_name' => 'sometimes|string|max:255',
+        $user = $request->user();
+        
+        // Check if teacher owns this class
+        if ($user && $class->teacher_id !== $user->teacher_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You can only edit your own classes'
+            ], 403);
+        }
+        
+        $request->validate([
+            'class_name' => 'sometimes|string|max:255'
         ]);
-
-        $class->update($validated);
-        return response()->json(["message" => "Kelas telah diperbarui", "data" => $class], 200);
+        
+        $class->update($request->only(['class_name']));
+        
+        return response()->json([
+            'success' => true,
+            'data' => $class,
+            'message' => 'Class updated successfully'
+        ]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Classes $class): JsonResponse
+    public function destroy(Request $request, Classes $class): JsonResponse
     {
+        $user = $request->user();
+        
+        // Check if teacher owns this class
+        if ($user && $class->teacher_id !== $user->teacher_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You can only delete your own classes'
+            ], 403);
+        }
+        
         try {
             // Delete related students first
             $class->students()->delete();
@@ -89,9 +155,16 @@ class ClassesController extends Controller
             // Now delete the class
             $class->delete();
             
-            return response()->json(null, 204);
+            return response()->json([
+                'success' => true,
+                'message' => 'Class deleted successfully'
+            ]);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to delete class due to related records'], 500);
+            return response()->json([
+                'success' => false, 
+                'message' => 'Failed to delete class due to related records',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }
