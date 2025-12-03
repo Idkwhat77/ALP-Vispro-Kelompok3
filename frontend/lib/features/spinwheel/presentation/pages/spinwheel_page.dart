@@ -83,7 +83,7 @@ class _SpinwheelPageState extends State<SpinwheelPage> {
   }
 
   @override
-Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
   return Scaffold(
     appBar: AppBar(
       title: const Text('Spinwheel'),
@@ -120,10 +120,8 @@ Widget build(BuildContext context) {
                     controller: _controller,
                     removeOnSelect: state.removeOnSelect,
                     onAdd: _onAdd,
-                    onShuffle: _onShuffle,
                     onLoadClass: _onLoadClass,
                     onToggleRemove: _onToggleRemove,
-                    onClearAll: () => bloc.add(const ClearItems()),
                   ),
 
                   const SizedBox(height: 12),
@@ -157,13 +155,58 @@ Widget build(BuildContext context) {
                   // Header Daftar Item
                   Padding(
                     padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-                    child: Text(
-                      "Daftar Item",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey[800],
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Daftar Item",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[800],
+                          ),
+                        ),
+
+                        Row(
+                          children: [
+                            // SHUFFLE
+                            SizedBox(
+                              height: 40, width: 40,
+                              child: ElevatedButton(
+                                onPressed: _onShuffle,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFFFA602),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: EdgeInsets.zero,
+                                ),
+                                child: const Icon(Icons.shuffle),
+                              ),
+                            ),
+
+                            const SizedBox(width: 8),
+
+                            // CLEAR ALL
+                            SizedBox(
+                              height: 40, width: 40,
+                              child: ElevatedButton(
+                                onPressed: () => bloc.add(const ClearItems()),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFE21B3C),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: EdgeInsets.zero,
+                                ),
+                                child: const Icon(Icons.delete_forever),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
 
