@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Simple dialog showing "Terpilih!" with trophy + name.
-/// Use: await showDialog(context: context, builder: (_) => SelectedDialog(name: '...'));
 class SelectedDialog extends StatelessWidget {
   final String name;
   const SelectedDialog({Key? key, required this.name}) : super(key: key);

@@ -29,7 +29,7 @@ class SpinButton extends StatelessWidget {
         ),
         child: Text(
           disabled ? "SPIN" : (isSpinning ? "...Berputar" : "SPIN"),
-          style: const TextStyle(fontSize: 16),
+          style: const TextStyle(fontSize: 20),
         ),
       ),
     );
