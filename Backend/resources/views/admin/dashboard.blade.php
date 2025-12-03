@@ -299,7 +299,28 @@
                 </table>
             </div>
         </div>
-        
+
+        <!-- Other Classes Section -->
+        <div class="card">
+            <h2>Other Classes (View Only)</h2>
+            <button class="add-btn" style="background: #17a2b8;" onclick="createTestData()">Create Test Data</button>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Class Name</th>
+                            <th>Teacher</th>
+                            <th>Student Count</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="other-classes-table">
+                        <tr><td colspan="4" class="loading">Loading other classes...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Students Section -->
         <div class="card">
             <h2>My Students</h2>
@@ -431,6 +452,9 @@
                     updateStudentsTable(allStudents);
                 }
                 
+                // Load other classes (after students are loaded)
+                await loadOtherClasses();
+                
                 // Update stats
                 document.getElementById('total-classes').textContent = allClasses.length;
                 document.getElementById('total-students').textContent = allStudents.length;
@@ -457,6 +481,49 @@
                     </td>
                 </tr>
             `).join('');
+        }
+        
+        async function loadOtherClasses() {
+            try {
+                console.log('Loading other classes...');
+                const otherClassesResult = await apiCall('/api/classes/other');
+                console.log('Other classes result:', otherClassesResult);
+                
+                if (otherClassesResult && otherClassesResult.success) {
+                    console.log('Other classes data:', otherClassesResult.data);
+                    updateOtherClassesTable(otherClassesResult.data);
+                } else {
+                    console.log('No other classes found or API failed');
+                    document.getElementById('other-classes-table').innerHTML = '<tr><td colspan="4">No other classes found</td></tr>';
+                }
+            } catch (error) {
+                console.error('Failed to load other classes:', error);
+                document.getElementById('other-classes-table').innerHTML = '<tr><td colspan="4">Error loading other classes</td></tr>';
+            }
+        }
+        
+        function updateOtherClassesTable(otherClasses) {
+            console.log('Updating other classes table with:', otherClasses);
+            const tbody = document.getElementById('other-classes-table');
+            if (otherClasses.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4">No other classes found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = otherClasses.map(cls => {
+                console.log('Processing class:', cls);
+                const studentCount = allStudents ? allStudents.filter(s => s.classes_id === cls.classes_id).length : 0;
+                return `
+                    <tr>
+                        <td>${cls.class_name}</td>
+                        <td>${cls.teacher ? cls.teacher.username : 'Unknown'}</td>
+                        <td>${studentCount}</td>
+                        <td>
+                            <button class="btn btn-primary" onclick="viewClass(${cls.classes_id})">View</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
         
         function updateStudentsTable(students) {
@@ -508,6 +575,20 @@
                         console.error('Error adding class:', error);
                         alert('Failed to add class');
                     });
+            }
+        }
+        
+        function viewClass(classId) {
+            // Find the class in other classes data
+            const classToView = allClasses.find(c => c.classes_id === classId) || 
+                               document.querySelector(`#other-classes-table tr:has(button[onclick="viewClass(${classId})"])`);
+            
+            if (classToView) {
+                // For now, just show an alert with class details
+                // You can later expand this to show a modal with more details
+                alert(`Viewing class details for Class ID: ${classId}\\n\\nThis is a read-only view of another teacher's class.`);
+            } else {
+                alert('Class not found.');
             }
         }
         
@@ -642,7 +723,40 @@
             if (event.target === modal) {
                 closeStudentModal();
             }
-        };
+        }
+        
+        async function createTestData() {
+            if (!confirm('This will create a test teacher and class. Continue?')) {
+                return;
+            }
+            
+            try {
+                // Create test teacher
+                const testTeacher = await apiCall('/api/teachers', 'POST', {
+                    username: 'testteacher',
+                    email: 'test@example.com',
+                    password: 'password'
+                });
+                
+                if (testTeacher && testTeacher.data) {
+                    // Create test class
+                    const testClass = await apiCall('/api/classes', 'POST', {
+                        class_name: 'Test Math Class',
+                        teacher_id: testTeacher.data.teacher_id
+                    });
+                    
+                    if (testClass) {
+                        alert('Test data created successfully!');
+                        loadDashboardData(); // Reload to show the new data
+                    }
+                }
+            } catch (error) {
+                console.error('Error creating test data:', error);
+                alert('Failed to create test data. It might already exist.');
+                // Try to reload anyway to see if data exists
+                loadDashboardData();
+            }
+        }
         
         function logout() {
             apiCall('/api/admin/logout', 'POST')
