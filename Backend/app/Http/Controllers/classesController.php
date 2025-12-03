@@ -54,18 +54,17 @@ class ClassesController extends Controller
         
         $user = $request->user();
         
-        // If authenticated, use the authenticated teacher's ID
-        if ($user) {
+        // If teacher_id is provided in request, use it (for creating test data)
+        // Otherwise, use the authenticated user's teacher_id
+        if ($request->has('teacher_id') && $request->teacher_id) {
+            $teacherId = $request->teacher_id;
+        } elseif ($user) {
             $teacherId = $user->teacher_id;
         } else {
-            // If not authenticated, require teacher_id in request (for API usage)
-            $teacherId = $request->teacher_id;
-            if (!$teacherId) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'teacher_id is required when not authenticated'
-                ], 400);
-            }
+            return response()->json([
+                'success' => false,
+                'message' => 'teacher_id is required when not authenticated'
+            ], 400);
         }
         
         $class = Classes::create([
@@ -78,6 +77,45 @@ class ClassesController extends Controller
             'data' => $class,
             'message' => 'Class created successfully'
         ], 201);
+    }
+
+    /**
+     * Get classes that are not assigned to the current teacher (view-only)
+     */
+    public function getOtherClasses(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Authentication required'
+            ], 401);
+        }
+        
+        $otherClasses = Classes::with('teacher')
+            ->where('teacher_id', '!=', $user->teacher_id)
+            ->get();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $otherClasses,
+            'message' => 'Other classes retrieved successfully.'
+        ]);
+    }
+
+    /**
+     * Get all classes (for debugging)
+     */
+    public function getAllClasses(): JsonResponse
+    {
+        $classes = Classes::with('teacher')->get();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $classes,
+            'message' => 'All classes retrieved successfully.'
+        ]);
     }
 
     /**

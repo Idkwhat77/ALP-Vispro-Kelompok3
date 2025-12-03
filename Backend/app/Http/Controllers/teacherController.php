@@ -226,4 +226,17 @@ class TeacherController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get all classes, including those not assigned to the teacher.
+     */
+    public function viewAllClasses(): JsonResponse
+    {
+        $classes = \App\Models\Classes::all();
+        return response()->json([
+            'success' => true,
+            'data' => $classes,
+            'message' => 'All classes retrieved successfully.'
+        ]);
+    }
 }
