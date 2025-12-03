@@ -11,10 +11,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Teacher extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
+    
     protected $fillable = [
         "username",
-        "email",
+        "email", 
         "password",
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
     ];
 
     protected $primaryKey = 'teacher_id';

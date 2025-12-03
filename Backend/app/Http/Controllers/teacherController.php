@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class TeacherController extends Controller
 {
@@ -72,6 +74,84 @@ class TeacherController extends Controller
 
         $teacher->update($validated);
         return response()->json(["message" => "Guru telah diperbarui", "data" => $teacher], 200);
+    }
+
+    /**
+     * Login method for web admin panel
+     */
+    public function login(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        // Get teacher directly from Teacher model instead of using Auth guard
+        $teacher = Teacher::where('email', $request->email)->first();
+        
+        if (!$teacher || !Hash::check($request->password, $teacher->password)) {
+            throw ValidationException::withMessages([
+                'email' => ['The provided credentials are incorrect.'],
+            ]);
+        }
+        
+        // Create token on the actual Teacher model instance
+        $token = $teacher->createToken('admin-panel')->plainTextToken;
+        
+        // Also login for web session
+        Auth::guard('web')->login($teacher);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Login successful',
+            'teacher' => [
+                'teacher_id' => $teacher->teacher_id,
+                'username' => $teacher->username,
+                'email' => $teacher->email,
+            ],
+            'token' => $token
+        ]);
+    }
+
+    /**
+     * Logout method for web admin panel
+     */
+    public function logout(Request $request): JsonResponse
+    {
+        if ($request->user()) {
+            $request->user()->currentAccessToken()->delete();
+        }
+        
+        Auth::guard('web')->logout();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Logged out successfully'
+        ]);
+    }
+
+    /**
+     * Get current authenticated teacher info
+     */
+    public function me(Request $request): JsonResponse
+    {
+        $teacher = $request->user();
+        
+        if (!$teacher) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Not authenticated'
+            ], 401);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'teacher' => [
+                'teacher_id' => $teacher->teacher_id,
+                'username' => $teacher->username,
+                'email' => $teacher->email,
+            ]
+        ]);
     }
 
     /**
