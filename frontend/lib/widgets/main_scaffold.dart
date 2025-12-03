@@ -13,104 +13,33 @@ class MainScaffold extends StatelessWidget {
 
     return Scaffold(
       body: child,
-
       bottomNavigationBar: CurvedNavigationBar(
         index: _getIndexFromRoute(currentRoute),
 
-        // color theme adjusments
         color: const Color(0xFF46178F),
         buttonBackgroundColor: const Color(0xFF46178F),
         backgroundColor: Colors.white,
-        //----------------------------------------------
 
-        // smoother animation
         animationCurve: Curves.easeInOutCubic,
         animationDuration: const Duration(milliseconds: 400),
 
-
         height: 75,
+
         items: [
-          // History
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.history,
-                size: 28,
-                color: currentRoute.startsWith('/history')
-                    ? Colors.white
-                    : Colors.white70,
-              ),
-              const SizedBox(height: 3),
-              Visibility(
-                visible: !currentRoute.startsWith('/history'),
-                child: Text(
-                  'History',
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 12,
-                    color: Colors.white70,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
+          _navIcon(
+            selected: currentRoute.startsWith('/history'),
+            icon: Icons.history,
           ),
-
-          // Tools
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.extension,
-                size: 28,
-                color: currentRoute.startsWith('/tools')
-                    ? Colors.white
-                    : Colors.white70,
-              ),
-              const SizedBox(height: 3),
-              Visibility(
-                visible: !currentRoute.startsWith('/tools'),
-                child: Text(
-                  'Tools',
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 12,
-                    color: Colors.white70,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
+          _navIcon(
+            selected: currentRoute.startsWith('/tools'),
+            icon: Icons.sports_esports,
           ),
-
-          // Students
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.people,
-                size: 28,
-                color: currentRoute.startsWith('/students')
-                    ? Colors.white
-                    : Colors.white70,
-              ),
-              const SizedBox(height: 3),
-              Visibility(
-                visible: !currentRoute.startsWith('/students'),
-                child: Text(
-                  'Students',
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 12,
-                    color: Colors.white70,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
+          _navIcon(
+            selected: currentRoute.startsWith('/students'),
+            icon: Icons.people,
           ),
         ],
+
         onTap: (index) {
           switch (index) {
             case 0:
@@ -128,10 +57,26 @@ class MainScaffold extends StatelessWidget {
     );
   }
 
+  // SELECTED = tidak diberi padding
+  // NON-SELECTED = diberi padding ke bawah
+  Widget _navIcon({
+    required bool selected,
+    required IconData icon,
+  }) {
+    return Padding(
+      padding: EdgeInsets.only(top: selected ? 0 : 15),
+      child: Icon(
+        icon,
+        size: 40,
+        color: selected ? Colors.white : Colors.white70,
+      ),
+    );
+  }
+
   int _getIndexFromRoute(String route) {
     if (route.startsWith('/history')) return 0;
     if (route.startsWith('/tools')) return 1;
     if (route.startsWith('/students')) return 2;
-    return 1; // default = tools
+    return 1;
   }
 }
