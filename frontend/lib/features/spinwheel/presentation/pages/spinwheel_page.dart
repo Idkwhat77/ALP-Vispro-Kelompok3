@@ -87,6 +87,7 @@ class _SpinwheelPageState extends State<SpinwheelPage> {
   return Scaffold(
     appBar: AppBar(
       title: const Text('Spinwheel'),
+      centerTitle: true,
       titleTextStyle: const TextStyle(
         fontSize: 24,
         fontFamily: 'Poppins',

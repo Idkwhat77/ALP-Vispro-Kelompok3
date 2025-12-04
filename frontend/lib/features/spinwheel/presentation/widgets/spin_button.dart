@@ -24,7 +24,7 @@ class SpinButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: disabled ? Colors.grey[300] : const Color(0xFF46178F),
           foregroundColor: disabled ? Colors.grey[700] : Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 10),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: Text(
