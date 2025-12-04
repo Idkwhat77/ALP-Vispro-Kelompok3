@@ -30,7 +30,7 @@ class PasswordTextFieldState extends State<PasswordTextField> {
           hintText: "Masukkan Password",
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 14,
-            vertical: 11,
+            vertical: 10,
           ),
           suffixIcon: IconButton(
             icon: Icon(
