@@ -127,7 +127,7 @@ class LoginPage extends StatelessWidget {
                                       TextStyle(fontFamily: 'Poppins'),
                                   contentPadding: EdgeInsets.symmetric(
                                     horizontal: 14,
-                                    vertical: 14,
+                                    vertical: 11,
                                   ),
                                 ),
                                 style:
