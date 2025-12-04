@@ -86,7 +86,7 @@ class _SpinwheelPageState extends State<SpinwheelPage> {
   Widget build(BuildContext context) {
   return Scaffold(
     appBar: AppBar(
-      title: const Text('Spinwheel'),
+      title: const Text('SpinWheel'),
       centerTitle: true,
       titleTextStyle: const TextStyle(
         fontSize: 24,

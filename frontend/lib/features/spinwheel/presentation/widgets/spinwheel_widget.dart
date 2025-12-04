@@ -26,14 +26,60 @@ class SpinwheelWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     if (items.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Stack(
           children: [
-            Icon(Icons.hourglass_empty, size: 56, color: Colors.grey[600]),
-            const SizedBox(height: 12),
-            const Text(
-              'Tambahkan item terlebih dahulu',
-              style: TextStyle(fontSize: 16, color: Colors.black87),
+            /// Background
+            Container(
+              width: 450,
+              height: 250,
+              decoration: BoxDecoration(
+                image: const DecorationImage(
+                  image: AssetImage("assets/images/add_item_bg.jpg"),
+                  fit: BoxFit.cover,
+                ),
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+            ),
+
+            /// SVG / GIF + Text di tengah
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    "assets/icon/clock_time.gif",  
+                    width: 100,
+                  ),
+                  const SizedBox(height: 10),
+
+                 Transform.translate(
+                  offset: const Offset(0, -30), // minus = naik
+                  child: SizedBox(
+                    // width: 220,
+                    child: const Text(
+                      "Tambahkan item\nterlebih dahulu",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.w500,
+                        height: 1.2,
+                      ),
+                      softWrap: true,
+                      // maxLines: 2,
+                    ),
+                  ),
+                ),
+
+                ],
+              ),
             ),
           ],
         ),

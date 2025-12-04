@@ -29,10 +29,12 @@ flutter:
   assets:
     - assets/logo/clinter_logo_v1.png
     - assets/icon/google.svg
-    - assets/icon/spinwheel.svg
+    - assets/icon/clock_time.gif
     - assets/images/spinwheel.jpg
     - assets/images/charades.jpg
     - assets/images/quiz_coming_soon.jpg
+    - assets/images/add_item_bg.jpg
+    - assets/images/empty_list_item.jpg
   fonts:
     - family: Poppins
       fonts:
