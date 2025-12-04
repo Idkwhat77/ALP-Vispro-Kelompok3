@@ -67,6 +67,7 @@
             padding: 2rem;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
         }
         
         .card h2 {
@@ -135,6 +136,11 @@
         
         .btn-danger {
             background: #dc3545;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #28a745;
             color: white;
         }
         
@@ -238,14 +244,6 @@
             color: #333;
         }
         
-        .btn-success {
-            background: #28a745;
-            color: white;
-            width: 100%;
-            padding: 0.75rem;
-            margin-top: 1rem;
-        }
-        
         .btn-secondary {
             background: #6c757d;
             color: white;
@@ -263,8 +261,8 @@
     </header>
     
     <div class="container">
+        <!-- Stats Cards -->
         <div class="dashboard-grid">
-            <!-- Stats Card -->
             <div class="card">
                 <h2>Overview</h2>
                 <div class="stats">
@@ -279,7 +277,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Classes Section -->
         <div class="card">
             <h2>My Classes</h2>
@@ -300,10 +298,10 @@
             </div>
         </div>
 
-        <!-- Other Classes Section -->
+        <!-- Other Teachers' Classes Section -->
         <div class="card">
-            <h2>Other Classes (View Only)</h2>
-            <button class="add-btn" style="background: #17a2b8;" onclick="createTestData()">Create Test Data</button>
+            <h2>Other Teachers' Classes</h2>
+            <p style="color: #666; margin-bottom: 1rem;">View classes created by other teachers (read-only)</p>
             <div class="table-container">
                 <table>
                     <thead>
@@ -320,22 +318,29 @@
                 </table>
             </div>
         </div>
+    </div>
 
-        <!-- Students Section -->
-        <div class="card">
-            <h2>My Students</h2>
-            <button class="add-btn" onclick="addStudent()">Add New Student</button>
+    <!-- Class Details Modal -->
+    <div id="classDetailsModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 id="details-class-name">Class Name</h3>
+                <span class="close" onclick="closeClassDetailsModal()">&times;</span>
+            </div>
+            
+            <div class="stats" style="justify-content: flex-start; gap: 2rem;">
+                <button class="add-btn" id="btn-add-student-to-class">Add Student to this Class</button>
+            </div>
+
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
                             <th>Student Name</th>
-                            <th>Class</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="students-table">
-                        <tr><td colspan="3" class="loading">Loading students...</td></tr>
+                    <tbody id="class-students-list">
                     </tbody>
                 </table>
             </div>
@@ -346,35 +351,40 @@
     <div id="studentModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 id="student-modal-title">Add New Student</h3>
-                <span class="close" onclick="closeStudentModal()">&times;</span>
+                <h3 id="student-modal-title">Add Student</h3>
+                <span class="close" onclick="document.getElementById('studentModal').style.display='none'">&times;</span>
             </div>
-            
-            <div id="current-class-info" class="class-info" style="display: none;">
-                <strong>Current Class:</strong> <span id="current-class-name"></span>
-            </div>
-            
             <form id="student-form">
-                <input type="hidden" id="student-id" name="student_id">
-                
+                <input type="hidden" id="student-id">
                 <div class="form-group">
-                    <label for="student-name">Student Name</label>
+                    <label for="student-name">Student Name:</label>
                     <input type="text" id="student-name" name="student_name" required>
                 </div>
-                
                 <div class="form-group">
-                    <label for="student-class">Class</label>
+                    <label for="student-class">Class:</label>
                     <select id="student-class" name="classes_id" required>
                         <option value="">Select a class...</option>
                     </select>
                 </div>
-                
-                <button type="submit" class="btn btn-success" id="student-submit-btn">
-                    Add Student
-                </button>
-                <button type="button" class="btn btn-secondary" onclick="closeStudentModal()">
-                    Cancel
-                </button>
+                <button type="submit" class="btn btn-success" id="student-submit-btn">Add Student</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Class Modal -->
+    <div id="classModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="class-modal-title">Add Class</h3>
+                <span class="close" onclick="document.getElementById('classModal').style.display='none'">&times;</span>
+            </div>
+            <form id="class-form">
+                <input type="hidden" id="class-id">
+                <div class="form-group">
+                    <label for="class-name">Class Name:</label>
+                    <input type="text" id="class-name" name="class_name" required>
+                </div>
+                <button type="submit" class="btn btn-success" id="class-submit-btn">Add Class</button>
             </form>
         </div>
     </div>
@@ -384,78 +394,94 @@
         let token = null;
         let allClasses = [];
         let allStudents = [];
-        
-        // Initialize
+        let activeClassId = null;
+
         document.addEventListener('DOMContentLoaded', function() {
             token = localStorage.getItem('admin_token');
             if (!token) {
                 window.location.href = '/admin';
                 return;
             }
-            
             loadUserInfo();
             loadDashboardData();
         });
-        
+
+        // API Call function
         async function apiCall(url, method = 'GET', data = null) {
             const options = {
                 method,
                 headers: {
+                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Accept': 'application/json'
                 }
             };
-            
-            if (data) {
+
+            if (data && (method === 'POST' || method === 'PUT')) {
                 options.body = JSON.stringify(data);
             }
-            
+
             const response = await fetch(url, options);
             
-            if (response.status === 401) {
-                localStorage.removeItem('admin_token');
-                localStorage.removeItem('admin_user');
-                window.location.href = '/admin';
-                return null;
+            if (!response.ok) {
+                if (response.status === 401) {
+                    localStorage.removeItem('admin_token');
+                    window.location.href = '/admin';
+                    return;
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
-            return await response.json();
+
+            return response.status === 204 ? null : response.json();
         }
-        
+
+        // Load user info
         async function loadUserInfo() {
             try {
-                const result = await apiCall('/api/admin/me');
-                if (result && result.success) {
-                    currentUser = result.teacher;
-                    document.getElementById('teacher-name').textContent = currentUser.username;
+                const user = await apiCall('/api/user');
+                if (user) {
+                    currentUser = user;
+                    document.getElementById('teacher-name').textContent = user.username || user.email;
                 }
             } catch (error) {
                 console.error('Failed to load user info:', error);
+                document.getElementById('teacher-name').textContent = 'Unknown User';
             }
         }
-        
+        // Load dashboard data
         async function loadDashboardData() {
             try {
-                // Load classes
                 const classesResult = await apiCall('/api/classes');
                 if (classesResult && classesResult.success) {
                     allClasses = classesResult.data.own_classes || classesResult.data;
-                    updateClassesTable(allClasses);
-                    populateClassOptions();
+                    
+                    const otherClasses = classesResult.data.other_classes || [];
+                    
+                    // Get students for current teacher's classes
+                    const studentsResult = await apiCall('/api/students');
+                    if (studentsResult && studentsResult.success) {
+                        allStudents = studentsResult.data;
+                    }
+                    
+                    // Get ALL students using the public endpoint to show correct counts for other classes
+                    try {
+                        const allStudentsResult = await apiCall('/api/public/students');
+                        if (allStudentsResult && allStudentsResult.success) {
+                            // Use all students for counting other classes
+                            updateOtherClassesTable(otherClasses, allStudentsResult.data);
+                        } else {
+                            // Fallback to current teacher's students only
+                            updateOtherClassesTable(otherClasses, allStudents);
+                        }
+                    } catch (error) {
+                        console.error('Failed to load all students:', error);
+                        // Fallback to current teacher's students only
+                        updateOtherClassesTable(otherClasses, allStudents);
+                    }
                 }
                 
-                // Load students
-                const studentsResult = await apiCall('/api/students');
-                if (studentsResult && studentsResult.success) {
-                    allStudents = studentsResult.data;
-                    updateStudentsTable(allStudents);
-                }
+                updateClassesTable(allClasses);
                 
-                // Load other classes (after students are loaded)
-                await loadOtherClasses();
-                
-                // Update stats
                 document.getElementById('total-classes').textContent = allClasses.length;
                 document.getElementById('total-students').textContent = allStudents.length;
                 
@@ -463,7 +489,48 @@
                 console.error('Failed to load dashboard data:', error);
             }
         }
+
+        // Update the function to accept the students array parameter
+        function updateOtherClassesTable(otherClasses, studentsData = allStudents) {
+            const tbody = document.getElementById('other-classes-table');
+            if (otherClasses.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4">No other classes found</td></tr>';
+            } else {
+                tbody.innerHTML = otherClasses.map(cls => {
+                    // Count students in this class using the provided students data
+                    const studentCount = studentsData.filter(s => s.classes_id === cls.classes_id).length;
+                    const teacherName = cls.teacher ? cls.teacher.username : `Teacher ID: ${cls.teacher_id}`;
+                    
+                    return `
+                    <tr>
+                        <td><strong style="color: #667eea;">${cls.class_name}</strong></td>
+                        <td>${teacherName}</td>
+                        <td>${studentCount} Students</td>
+                        <td>
+                            <button class="btn btn-primary" onclick="viewOtherClass(${cls.classes_id}, '${cls.class_name}', '${teacherName}', ${JSON.stringify(studentsData).replace(/"/g, '&quot;')})">View</button>
+                        </td>
+                    </tr>
+                `;
+                }).join('');
+            }
+        }
+
+        // Update viewOtherClass to handle the students data
+        function viewOtherClass(classId, className, teacherName, allStudentsData = null) {
+            document.getElementById('details-class-name').textContent = `${className} (by ${teacherName})`;
+            
+            const addBtn = document.getElementById('btn-add-student-to-class');
+            addBtn.style.display = 'none';
+
+            // Use all students data if provided, otherwise use current teacher's students
+            const studentsToUse = allStudentsData || allStudents;
+            const classStudents = studentsToUse.filter(s => s.classes_id === classId);
+            
+            renderReadOnlyClassStudents(classStudents);
+            document.getElementById('classDetailsModal').style.display = 'block';
+        }
         
+        // Add this function right after the loadDashboardData function
         function updateClassesTable(classes) {
             const tbody = document.getElementById('classes-table');
             if (classes.length === 0) {
@@ -471,89 +538,103 @@
                 return;
             }
             
-            tbody.innerHTML = classes.map(cls => `
+            tbody.innerHTML = classes.map(cls => {
+                const count = allStudents.filter(s => s.classes_id === cls.classes_id).length;
+                return `
                 <tr>
-                    <td>${cls.class_name}</td>
-                    <td>${allStudents.filter(s => s.classes_id === cls.classes_id).length}</td>
+                    <td><strong style="color: #667eea;">${cls.class_name}</strong></td>
+                    <td>${count} Students</td>
                     <td>
+                        <button class="btn btn-primary" onclick="manageClass(${cls.classes_id})">Manage</button>
                         <button class="btn btn-primary" onclick="editClass(${cls.classes_id})">Edit</button>
                         <button class="btn btn-danger" onclick="deleteClass(${cls.classes_id})">Delete</button>
                     </td>
                 </tr>
+                `;
+            }).join('');
+        }
+
+        // Add this new function to render read-only student list
+        function renderReadOnlyClassStudents(students) {
+            const tbody = document.getElementById('class-students-list');
+            if (students.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding: 2rem;">No students in this class.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = students.map(student => `
+                <tr>
+                    <td>${student.student_name}</td>
+                    <td><em style="color: #666;">Read-only access</em></td>
+                </tr>
             `).join('');
         }
-        
-        async function loadOtherClasses() {
-            try {
-                console.log('Loading other classes...');
-                const otherClassesResult = await apiCall('/api/classes/other');
-                console.log('Other classes result:', otherClassesResult);
-                
-                if (otherClassesResult && otherClassesResult.success) {
-                    console.log('Other classes data:', otherClassesResult.data);
-                    updateOtherClassesTable(otherClassesResult.data);
-                } else {
-                    console.log('No other classes found or API failed');
-                    document.getElementById('other-classes-table').innerHTML = '<tr><td colspan="4">No other classes found</td></tr>';
-                }
-            } catch (error) {
-                console.error('Failed to load other classes:', error);
-                document.getElementById('other-classes-table').innerHTML = '<tr><td colspan="4">Error loading other classes</td></tr>';
-            }
-        }
-        
-        function updateOtherClassesTable(otherClasses) {
-            console.log('Updating other classes table with:', otherClasses);
-            const tbody = document.getElementById('other-classes-table');
-            if (otherClasses.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4">No other classes found</td></tr>';
-                return;
-            }
+
+        // Update the existing manageClass function to ensure Add button shows for own classes
+        function manageClass(classId) {
+            const cls = allClasses.find(c => c.classes_id === classId);
+            if (!cls) return;
+
+            activeClassId = classId;
+            document.getElementById('details-class-name').textContent = cls.class_name;
             
-            tbody.innerHTML = otherClasses.map(cls => {
-                console.log('Processing class:', cls);
-                const studentCount = allStudents ? allStudents.filter(s => s.classes_id === cls.classes_id).length : 0;
-                return `
-                    <tr>
-                        <td>${cls.class_name}</td>
-                        <td>${cls.teacher ? cls.teacher.username : 'Unknown'}</td>
-                        <td>${studentCount}</td>
-                        <td>
-                            <button class="btn btn-primary" onclick="viewClass(${cls.classes_id})">View</button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
+            // Show the "Add Student" button for own classes
+            const addBtn = document.getElementById('btn-add-student-to-class');
+            addBtn.style.display = 'block';
+            addBtn.onclick = () => openAddStudentModal(classId);
+
+            const classStudents = allStudents.filter(s => s.classes_id === classId);
+            renderClassStudents(classStudents);
+
+            document.getElementById('classDetailsModal').style.display = 'block';
         }
-        
-        function updateStudentsTable(students) {
-            const tbody = document.getElementById('students-table');
+
+        function renderClassStudents(students) {
+            const tbody = document.getElementById('class-students-list');
             if (students.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3">No students found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding: 2rem;">No students in this class yet.</td></tr>';
                 return;
             }
-            
-            tbody.innerHTML = students.map(student => {
-                const studentClass = allClasses.find(c => c.classes_id === student.classes_id);
-                const className = studentClass ? studentClass.class_name : 'Unknown Class';
-                
-                return `
-                    <tr>
-                        <td>${student.student_name}</td>
-                        <td>${className}</td>
-                        <td>
-                            <button class="btn btn-primary" onclick="editStudent(${student.id_students})">Edit</button>
-                            <button class="btn btn-danger" onclick="deleteStudent(${student.id_students})">Delete</button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
+
+            tbody.innerHTML = students.map(student => `
+                <tr>
+                    <td>${student.student_name}</td>
+                    <td>
+                        <button class="btn btn-primary" onclick="editStudent(${student.id_students})">Edit</button>
+                        <button class="btn btn-danger" onclick="deleteStudent(${student.id_students})">Remove</button>
+                    </td>
+                </tr>
+            `).join('');
         }
-        
+
+        function closeClassDetailsModal() {
+            document.getElementById('classDetailsModal').style.display = 'none';
+            activeClassId = null;
+        }
+
+        // Student Modal Functions
+        function openAddStudentModal(preSelectedClassId = null) {
+            document.getElementById('student-modal-title').textContent = 'Add New Student';
+            document.getElementById('student-submit-btn').textContent = 'Add Student';
+            document.getElementById('student-form').reset();
+            document.getElementById('student-id').value = '';
+            
+            populateClassOptions();
+            
+            const classSelect = document.getElementById('student-class');
+            if (preSelectedClassId) {
+                classSelect.value = preSelectedClassId;
+                classSelect.disabled = true;
+            } else {
+                classSelect.disabled = false;
+            }
+
+            document.getElementById('studentModal').style.display = 'block';
+        }
+
         function populateClassOptions() {
             const select = document.getElementById('student-class');
             select.innerHTML = '<option value="">Select a class...</option>';
-            
             allClasses.forEach(cls => {
                 const option = document.createElement('option');
                 option.value = cls.classes_id;
@@ -561,210 +642,160 @@
                 select.appendChild(option);
             });
         }
-        
-        // Action functions
-        function addClass() {
-            const className = prompt('Enter class name:');
-            if (className) {
-                apiCall('/api/classes', 'POST', { class_name: className })
-                    .then(() => {
-                        alert('Class added successfully!');
-                        loadDashboardData();
-                    })
-                    .catch(error => {
-                        console.error('Error adding class:', error);
-                        alert('Failed to add class');
-                    });
-            }
-        }
-        
-        function viewClass(classId) {
-            // Find the class in other classes data
-            const classToView = allClasses.find(c => c.classes_id === classId) || 
-                               document.querySelector(`#other-classes-table tr:has(button[onclick="viewClass(${classId})"])`);
+
+        function editStudent(studentId) {
+            const student = allStudents.find(s => s.id_students === studentId);
+            if (!student) return;
+
+            document.getElementById('student-modal-title').textContent = 'Edit Student';
+            document.getElementById('student-submit-btn').textContent = 'Update Student';
+            document.getElementById('student-id').value = studentId;
+            document.getElementById('student-name').value = student.student_name;
             
-            if (classToView) {
-                // For now, just show an alert with class details
-                // You can later expand this to show a modal with more details
-                alert(`Viewing class details for Class ID: ${classId}\\n\\nThis is a read-only view of another teacher's class.`);
-            } else {
-                alert('Class not found.');
-            }
-        }
-        
-        function addStudent() {
-            if (allClasses.length === 0) {
-                alert('Please create a class first before adding students.');
-                return;
-            }
-            
-            document.getElementById('student-modal-title').textContent = 'Add New Student';
-            document.getElementById('student-submit-btn').textContent = 'Add Student';
-            document.getElementById('student-form').reset();
-            document.getElementById('student-id').value = '';
-            document.getElementById('current-class-info').style.display = 'none';
+            populateClassOptions();
+            document.getElementById('student-class').value = student.classes_id;
+            document.getElementById('student-class').disabled = false;
+
             document.getElementById('studentModal').style.display = 'block';
         }
-        
-        function editClass(id) {
-            const cls = allClasses.find(c => c.classes_id === id);
-            if (cls) {
-                const newName = prompt('Enter new class name:', cls.class_name);
-                if (newName && newName !== cls.class_name) {
-                    apiCall(`/api/classes/${id}`, 'PUT', { class_name: newName })
-                        .then(() => {
-                            alert('Class updated successfully!');
-                            loadDashboardData();
-                        })
-                        .catch(error => {
-                            console.error('Error updating class:', error);
-                            alert('Failed to update class');
-                        });
-                }
-            }
-        }
-        
-        function editStudent(id) {
-            const student = allStudents.find(s => s.id_students === id);
-            if (student) {
-                const currentClass = allClasses.find(c => c.classes_id === student.classes_id);
-                
-                document.getElementById('student-modal-title').textContent = 'Edit Student';
-                document.getElementById('student-submit-btn').textContent = 'Update Student';
-                document.getElementById('student-id').value = student.id_students;
-                document.getElementById('student-name').value = student.student_name;
-                document.getElementById('student-class').value = student.classes_id;
-                
-                // Show current class info
-                if (currentClass) {
-                    document.getElementById('current-class-name').textContent = currentClass.class_name;
-                    document.getElementById('current-class-info').style.display = 'block';
-                }
-                
-                document.getElementById('studentModal').style.display = 'block';
-            }
-        }
-        
-        function deleteClass(id) {
-            const cls = allClasses.find(c => c.classes_id === id);
-            const studentsInClass = allStudents.filter(s => s.classes_id === id).length;
-            
-            let confirmMessage = `Are you sure you want to delete "${cls.class_name}"?`;
-            if (studentsInClass > 0) {
-                confirmMessage += `\n\nThis will also delete ${studentsInClass} student(s) in this class.`;
-            }
-            
-            if (confirm(confirmMessage)) {
-                apiCall(`/api/classes/${id}`, 'DELETE')
-                    .then(() => {
-                        alert('Class deleted successfully!');
-                        loadDashboardData();
-                    })
-                    .catch(error => {
-                        console.error('Error deleting class:', error);
-                        alert('Failed to delete class');
-                    });
-            }
-        }
-        
-        function deleteStudent(id) {
-            const student = allStudents.find(s => s.id_students === id);
-            if (confirm(`Are you sure you want to delete "${student.student_name}"?`)) {
-                apiCall(`/api/students/${id}`, 'DELETE')
-                    .then(() => {
-                        alert('Student deleted successfully!');
-                        loadDashboardData();
-                    })
-                    .catch(error => {
-                        console.error('Error deleting student:', error);
-                        alert('Failed to delete student');
-                    });
-            }
-        }
-        
-        // Modal functions
-        function closeStudentModal() {
-            document.getElementById('studentModal').style.display = 'none';
-        }
-        
+
         // Student form submission
         document.getElementById('student-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const formData = new FormData(this);
+            const nameInput = document.getElementById('student-name').value;
+            const classSelect = document.getElementById('student-class');
+            const classId = classSelect.disabled ? activeClassId : parseInt(classSelect.value);
+            const studentId = document.getElementById('student-id').value;
+
             const data = {
-                student_name: formData.get('student_name'),
-                classes_id: parseInt(formData.get('classes_id'))
+                student_name: nameInput,
+                classes_id: classId
             };
-            
-            const studentId = formData.get('student_id');
-            const isEditing = studentId && studentId !== '';
-            
+
             try {
-                if (isEditing) {
+                if (studentId) {
                     await apiCall(`/api/students/${studentId}`, 'PUT', data);
-                    alert('Student updated successfully!');
+                    alert('Student updated!');
                 } else {
                     await apiCall('/api/students', 'POST', data);
-                    alert('Student added successfully!');
+                    alert('Student added!');
                 }
                 
-                closeStudentModal();
-                loadDashboardData();
+                document.getElementById('studentModal').style.display = 'none';
+                await loadDashboardData();
+                
+                if (activeClassId) {
+                    manageClass(activeClassId);
+                }
+
             } catch (error) {
-                console.error('Error saving student:', error);
-                alert('Failed to save student');
+                console.error('Error:', error);
+                alert('Something went wrong!');
             }
         });
-        
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('studentModal');
-            if (event.target === modal) {
-                closeStudentModal();
-            }
+
+        // Class Functions
+        function addClass() {
+            document.getElementById('class-modal-title').textContent = 'Add New Class';
+            document.getElementById('class-submit-btn').textContent = 'Add Class';
+            document.getElementById('class-form').reset();
+            document.getElementById('class-id').value = '';
+            document.getElementById('classModal').style.display = 'block';
         }
-        
-        async function createTestData() {
-            if (!confirm('This will create a test teacher and class. Continue?')) {
-                return;
-            }
+
+        function editClass(classId) {
+            const cls = allClasses.find(c => c.classes_id === classId);
+            if (!cls) return;
+
+            document.getElementById('class-modal-title').textContent = 'Edit Class';
+            document.getElementById('class-submit-btn').textContent = 'Update Class';
+            document.getElementById('class-id').value = classId;
+            document.getElementById('class-name').value = cls.class_name;
+            document.getElementById('classModal').style.display = 'block';
+        }
+
+        // Class form submission
+        document.getElementById('class-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
             
+            const className = document.getElementById('class-name').value;
+            const classId = document.getElementById('class-id').value;
+
+            const data = {
+                class_name: className,
+                teacher_id: currentUser?.teacher_id
+            };
+
             try {
-                // Create test teacher
-                const testTeacher = await apiCall('/api/teachers', 'POST', {
-                    username: 'testteacher',
-                    email: 'test@example.com',
-                    password: 'password'
-                });
-                
-                if (testTeacher && testTeacher.data) {
-                    // Create test class
-                    const testClass = await apiCall('/api/classes', 'POST', {
-                        class_name: 'Test Math Class',
-                        teacher_id: testTeacher.data.teacher_id
-                    });
-                    
-                    if (testClass) {
-                        alert('Test data created successfully!');
-                        loadDashboardData(); // Reload to show the new data
-                    }
+                if (classId) {
+                    await apiCall(`/api/classes/${classId}`, 'PUT', data);
+                    alert('Class updated!');
+                } else {
+                    await apiCall('/api/classes', 'POST', data);
+                    alert('Class added!');
                 }
+                
+                document.getElementById('classModal').style.display = 'none';
+                await loadDashboardData();
+
             } catch (error) {
-                console.error('Error creating test data:', error);
-                alert('Failed to create test data. It might already exist.');
-                // Try to reload anyway to see if data exists
-                loadDashboardData();
+                console.error('Error:', error);
+                alert('Something went wrong!');
+            }
+        });
+
+        // Delete Functions
+        async function deleteStudent(id) {
+            if (confirm("Remove this student?")) {
+                try {
+                    await apiCall(`/api/students/${id}`, 'DELETE');
+                    await loadDashboardData();
+                    if (activeClassId) manageClass(activeClassId);
+                    alert('Student removed!');
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to remove student');
+                }
             }
         }
-        
-        function logout() {
-            apiCall('/api/admin/logout', 'POST')
-                .finally(() => {
-                    localStorage.removeItem('admin_token');
-                    localStorage.removeItem('admin_user');
-                    window.location.href = '/admin';
-                });
+
+        async function deleteClass(id) {
+            if (confirm("Delete this class? This will also remove all students in this class.")) {
+                try {
+                    await apiCall(`/api/classes/${id}`, 'DELETE');
+                    await loadDashboardData();
+                    alert('Class deleted!');
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to delete class');
+                }
+            }
+        }
+
+        // Logout function
+        async function logout() {
+            try {
+                await apiCall('/api/logout', 'POST');
+            } catch (error) {
+                console.error('Logout error:', error);
+            } finally {
+                localStorage.removeItem('admin_token');
+                window.location.href = '/admin';
+            }
+        }
+
+        // Close modals on outside click
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('studentModal')) {
+                document.getElementById('studentModal').style.display = 'none';
+            }
+            if (event.target == document.getElementById('classDetailsModal')) {
+                closeClassDetailsModal();
+            }
+            if (event.target == document.getElementById('classModal')) {
+                document.getElementById('classModal').style.display = 'none';
+            }
         }
     </script>
 </body>
