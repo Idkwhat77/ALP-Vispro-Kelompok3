@@ -6,11 +6,11 @@ class SpinButton extends StatelessWidget {
   final VoidCallback onSpin;
 
   const SpinButton({
-    Key? key,
+    super.key,
     required this.items,
     required this.isSpinning,
     required this.onSpin,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

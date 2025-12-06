@@ -41,8 +41,9 @@ class SpinwheelBloc extends Bloc<SpinwheelEvent, SpinwheelState> {
       newItems.removeAt(idx);
     }
     int? newSelected = state.selectedIndex;
-    if (newItems.isEmpty) newSelected = null;
-    else if (newSelected != null && newSelected >= newItems.length) newSelected = null;
+    if (newItems.isEmpty) {
+      newSelected = null;
+    } else if (newSelected != null && newSelected >= newItems.length) newSelected = null;
     emit(state.copyWith(items: newItems, selectedIndex: newSelected));
   }
 
@@ -71,7 +72,7 @@ class SpinwheelBloc extends Bloc<SpinwheelEvent, SpinwheelState> {
   }
 
   Future<void> _onSpinWheel(SpinWheel event, Emitter<SpinwheelState> emit) async {
-    if (state.items.length < 1) return;
+    if (state.items.isEmpty) return;
     final index = _rnd.nextInt(state.items.length);
     emit(state.copyWith(isSpinning: true, selectedIndex: index));
     try {
@@ -87,8 +88,9 @@ class SpinwheelBloc extends Bloc<SpinwheelEvent, SpinwheelState> {
     int? newSelected = idx;
     if (remove && newItems.isNotEmpty && idx >= 0 && idx < newItems.length) {
       newItems.removeAt(idx);
-      if (newItems.isEmpty) newSelected = null;
-      else if (newSelected != null && newSelected >= newItems.length) newSelected = null;
+      if (newItems.isEmpty) {
+        newSelected = null;
+      } else if (newSelected >= newItems.length) newSelected = null;
     }
     emit(state.copyWith(items: newItems, selectedIndex: newSelected, isSpinning: false));
   }

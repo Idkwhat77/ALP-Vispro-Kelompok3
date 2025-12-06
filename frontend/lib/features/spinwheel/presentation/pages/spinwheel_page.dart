@@ -13,7 +13,7 @@ import '../widgets/selected_dialog.dart';
 import '../../../../services/class_generator.dart';
 
 class SpinwheelPage extends StatefulWidget {
-  const SpinwheelPage({Key? key}) : super(key: key);
+  const SpinwheelPage({super.key});
 
   @override
   State<SpinwheelPage> createState() => _SpinwheelPageState();
@@ -163,7 +163,7 @@ class _SpinwheelPageState extends State<SpinwheelPage> {
                           "Daftar Item",
                           style: TextStyle(
                             fontSize: 20,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w400,
                             color: Colors.grey[800],
                           ),
                         ),
@@ -218,7 +218,11 @@ class _SpinwheelPageState extends State<SpinwheelPage> {
                         ? Center(
                             child: Text(
                               'Belum ada item',
-                              style: TextStyle(color: Colors.grey[600]),
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           )
                         : ListView.separated(
