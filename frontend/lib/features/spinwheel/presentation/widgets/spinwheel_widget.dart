@@ -8,11 +8,11 @@ class SpinwheelWidget extends StatelessWidget {
   final VoidCallback onAnimationEnd;
 
   const SpinwheelWidget({
-    Key? key,
+    super.key,
     required this.items,
     required this.selectedStream,
     required this.onAnimationEnd,
-  }) : super(key: key);
+  });
 
   static const List<Color> _palette = [
     Color(0xFFE21B3C),
@@ -33,51 +33,38 @@ class SpinwheelWidget extends StatelessWidget {
               width: 450,
               height: 250,
               decoration: BoxDecoration(
-                image: const DecorationImage(
-                  image: AssetImage("assets/images/add_item_bg.jpg"),
-                  fit: BoxFit.cover,
-                ),
                 borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
               ),
             ),
 
-            /// SVG / GIF + Text di tengah
+            // SVG + Text di tengah
             Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Image.asset(
                     "assets/icon/clock_time.gif",  
-                    width: 100,
+                    width: 150,
+                    height: 150,
                   ),
                   const SizedBox(height: 10),
 
                  Transform.translate(
-                  offset: const Offset(0, -30), // minus = naik
+                  offset: const Offset(0, -40), // minus = naik
                   child: SizedBox(
-                    // width: 220,
                     child: const Text(
                       "Tambahkan item\nterlebih dahulu",
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 16,
                         color: Colors.grey,
                         fontWeight: FontWeight.w500,
                         height: 1.2,
                       ),
                       softWrap: true,
-                      // maxLines: 2,
                     ),
                   ),
                 ),
-
                 ],
               ),
             ),

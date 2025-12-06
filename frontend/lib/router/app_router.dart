@@ -4,11 +4,12 @@ import 'package:frontend/features/spinwheel/blocs/spinwheel_bloc.dart';
 import 'package:frontend/features/spinwheel/presentation/pages/spinwheel_page.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/home/student_data/bloc/student_bloc.dart';
 import '../widgets/main_scaffold.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/home/history/presentation/pages/history_page.dart';
 import '../features/home/toolset/presentation/pages/toolset_page.dart';
-import '../features/home/student_data/presentation/pages/student_data_page.dart';
+import '../features/home/student_data/presentation/pages/student_page.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/login',
@@ -39,9 +40,14 @@ final GoRouter appRouter = GoRouter(
           path: '/tools',
           builder: (context, state) => const ToolsetPage(),
         ),
-        GoRoute(
+       GoRoute(
           path: '/students',
-          builder: (context, state) => const StudentDataPage(),
+          builder: (context, state) {
+            return BlocProvider(
+              create: (_) => StudentBloc(),
+              child: StudentPage(),
+            );
+          },
         ),
       ],
     ),

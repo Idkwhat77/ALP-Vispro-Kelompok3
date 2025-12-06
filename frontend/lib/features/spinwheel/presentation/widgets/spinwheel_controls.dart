@@ -13,13 +13,13 @@ class SpinwheelControls extends StatelessWidget {
   final OnToggleRemove onToggleRemove;
 
   const SpinwheelControls({
-    Key? key,
+    super.key,
     required this.controller,
     required this.removeOnSelect,
     required this.onAdd,
     required this.onLoadClass,
     required this.onToggleRemove,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -31,9 +31,10 @@ class SpinwheelControls extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 3)),
-        ],
+        border: Border.all(
+          color: Colors.black,
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -42,7 +43,6 @@ class SpinwheelControls extends StatelessWidget {
           DropdownButtonFormField<String>(
             isExpanded: true,
             dropdownColor: Colors.white,
-            // iconEnabledColor: Colors.grey[700],
             decoration: InputDecoration(
               filled: true,
               fillColor: Colors.white,
