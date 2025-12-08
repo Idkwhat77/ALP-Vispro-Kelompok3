@@ -8,6 +8,9 @@ import '../../blocs/spinwheel_bloc.dart';
 import '../../blocs/spinwheel_event.dart';
 import '../../blocs/spinwheel_state.dart';
 
+import '../helpers/spinwheel_dialog_helper.dart';
+import '../widgets/spinwheel_header.dart';
+import '../widgets/spinwheel_item_list.dart';
 import '../widgets/spinwheel_widget.dart';
 import '../widgets/spinwheel_controls.dart';
 import '../widgets/spin_button.dart';
@@ -23,6 +26,7 @@ class SpinwheelPage extends StatefulWidget {
 
 class _SpinwheelPageState extends State<SpinwheelPage> {
   final TextEditingController _controller = TextEditingController();
+  late ConfettiController _confetti;
   StreamSubscription<int>? _selectedSub;
 
   int? _lastSelectedIndex;
@@ -31,6 +35,7 @@ class _SpinwheelPageState extends State<SpinwheelPage> {
   @override
   void initState() {
     super.initState();
+    _confetti = ConfettiController(duration: const Duration(seconds: 2));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final bloc = context.read<SpinwheelBloc>();
 
