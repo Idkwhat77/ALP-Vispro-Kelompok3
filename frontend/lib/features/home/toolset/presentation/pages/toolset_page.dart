@@ -63,10 +63,15 @@ class _ToolsetPageState extends State<ToolsetPage> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  const CircleAvatar(
-                    radius: 26,
-                    backgroundColor: Color(0xFF46178F),
-                    child: Icon(Icons.person, color: Colors.white, size: 26),
+                  GestureDetector(
+                    onTap: () {
+                      context.go('/profile'); 
+                    },
+                    child: const CircleAvatar(
+                      radius: 26,
+                      backgroundColor: Color(0xFF46178F),
+                      child: Icon(Icons.person, color: Colors.white, size: 26),
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Column(

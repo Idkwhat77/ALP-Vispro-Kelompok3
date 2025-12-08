@@ -5,6 +5,7 @@ import 'package:frontend/features/spinwheel/presentation/pages/spinwheel_page.da
 import 'package:go_router/go_router.dart';
 
 import '../features/home/student_data/bloc/student_bloc.dart';
+import '../features/profile/presentation/pages/profile_page.dart';
 import '../widgets/main_scaffold.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/home/history/presentation/pages/history_page.dart';
@@ -25,6 +26,13 @@ final GoRouter appRouter = GoRouter(
       );
     },
   ),
+
+    // ---------- PROFILE ROUTE ----------
+    GoRoute(
+    path: '/profile',
+    builder: (context, state) => const ProfilePage(),
+  ),
+
 
     // ---------- MAIN SHELL ROUTE ----------
     ShellRoute(

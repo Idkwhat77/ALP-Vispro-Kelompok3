@@ -29,6 +29,8 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - assets/audio/win.wav
+    - assets/audio/spin.wav
     - assets/logo/clinter_logo_v1.png
     - assets/icon/google.svg
     - assets/icon/clock_time.gif
