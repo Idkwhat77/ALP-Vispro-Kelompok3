@@ -60,3 +60,27 @@ class FinishSpin extends SpinwheelEvent {
 class ClearItems extends SpinwheelEvent {
   const ClearItems();
 }
+
+class LoadClassesFromAPI extends SpinwheelEvent {
+  const LoadClassesFromAPI();
+}
+
+class LoadStudentsFromClass extends SpinwheelEvent {
+  final int classId;
+  const LoadStudentsFromClass(this.classId);
+  @override
+  List<Object?> get props => [classId];
+}
+
+class SaveWheelResult extends SpinwheelEvent {
+  final int classId;
+  final String winnerId;
+  final String winnerName;
+  const SaveWheelResult({
+    required this.classId, 
+    required this.winnerId,
+    required this.winnerName,
+  });
+  @override
+  List<Object?> get props => [classId, winnerId, winnerName];
+}

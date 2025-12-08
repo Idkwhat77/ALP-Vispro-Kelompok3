@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/services/class_generator.dart';
+import '../../../../core/models/class.dart';
 
 typedef OnAdd = void Function();
-typedef OnLoadClass = void Function(String? value);
+typedef OnLoadClass = void Function(ClassModel? value);
 typedef OnToggleRemove = void Function(bool value);
 
 class SpinwheelControls extends StatelessWidget {
@@ -11,6 +11,8 @@ class SpinwheelControls extends StatelessWidget {
   final OnAdd onAdd;
   final OnLoadClass onLoadClass;
   final OnToggleRemove onToggleRemove;
+  final List<ClassModel>? classes;
+  final bool isLoading;
 
   const SpinwheelControls({
     super.key,
@@ -19,12 +21,12 @@ class SpinwheelControls extends StatelessWidget {
     required this.onAdd,
     required this.onLoadClass,
     required this.onToggleRemove,
+    this.classes,
+    this.isLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final classList = ClassGenerator.classList;
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
@@ -40,7 +42,7 @@ class SpinwheelControls extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Dropdown kelas
-          DropdownButtonFormField<String>(
+          DropdownButtonFormField<ClassModel>(
             isExpanded: true,
             dropdownColor: Colors.white,
             decoration: InputDecoration(
@@ -52,14 +54,26 @@ class SpinwheelControls extends StatelessWidget {
               contentPadding: const EdgeInsets.symmetric(
                   horizontal:12, vertical: 10),
             ),
-            hint: const Text("Pilih kelas"),
-            onChanged: onLoadClass,
-            items: classList
-                .map((k) => DropdownMenuItem(
-                      value: k,
-                      child: Text(k),
+            hint: isLoading 
+                ? const Row(
+                    children: [
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      SizedBox(width: 8),
+                      Text("Loading classes..."),
+                    ],
+                  )
+                : const Text("Pilih kelas"),
+            onChanged: isLoading ? null : onLoadClass,
+            items: classes
+                ?.map((classModel) => DropdownMenuItem<ClassModel>(
+                      value: classModel,
+                      child: Text(classModel.className),
                     ))
-                .toList(),
+                .toList() ?? [],
           ),
 
           const SizedBox(height: 12),

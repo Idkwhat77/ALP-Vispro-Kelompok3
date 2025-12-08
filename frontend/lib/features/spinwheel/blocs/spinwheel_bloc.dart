@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:bloc/bloc.dart';
+import '../../../core/repositories/class_repository.dart';
+import '../../../core/repositories/student_repository.dart';
+import '../../../core/repositories/wheel_repository.dart';
 import 'spinwheel_event.dart';
 import 'spinwheel_state.dart';
 
@@ -12,9 +15,8 @@ class SpinwheelBloc extends Bloc<SpinwheelEvent, SpinwheelState> {
   SpinwheelBloc()
       : super(SpinwheelState(
           items: const [],
-          selectedController: StreamController<int>.broadcast(), // placeholder, will replace below
+          selectedController: StreamController<int>.broadcast(),
         )) {
-    emit(state.copyWith(selectedController: _selectedController));
 
     on<AddItem>(_onAddItem);
     on<RemoveItemAt>(_onRemoveItemAt);
@@ -25,6 +27,12 @@ class SpinwheelBloc extends Bloc<SpinwheelEvent, SpinwheelState> {
     on<SpinWheel>(_onSpinWheel);
     on<FinishSpin>(_onFinishSpin);
     on<ClearItems>(_onClearItems);
+    on<LoadClassesFromAPI>(_onLoadClassesFromAPI);
+    on<LoadStudentsFromClass>(_onLoadStudentsFromClass);
+    on<SaveWheelResult>(_onSaveWheelResult);
+
+    // Auto load classes when bloc is created
+    add(const LoadClassesFromAPI());
   }
 
   Stream<int> get selectedStream => _selectedController.stream;
@@ -101,6 +109,68 @@ class SpinwheelBloc extends Bloc<SpinwheelEvent, SpinwheelState> {
       selectedIndex: null,
       isSpinning: false,
     ));
+  }
+
+  Future<void> _onLoadClassesFromAPI(
+    LoadClassesFromAPI event,
+    Emitter<SpinwheelState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true));
+
+    try {
+      final classes = await ClassRepository.getAllClasses();
+      emit(state.copyWith(
+        classes: classes,
+        isLoading: false,
+      ));
+    } catch (error) {
+      emit(state.copyWith(
+        error: 'Failed to load classes: $error',
+        isLoading: false,
+      ));
+    }
+  }
+
+  Future<void> _onLoadStudentsFromClass(
+    LoadStudentsFromClass event,
+    Emitter<SpinwheelState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true));
+
+    try {
+      final students = await StudentRepository.getStudentsByClassId(event.classId);
+      
+      // Convert students to spinwheel items
+      final items = students.map((student) => '${student.studentName} - ${student.idStudents}').toList();
+      
+      emit(state.copyWith(
+        items: items,
+        selectedClass: state.classes.firstWhere((c) => c.classesId == event.classId),
+        isLoading: false,
+      ));
+    } catch (error) {
+      emit(state.copyWith(
+        error: 'Failed to load students: $error',
+        isLoading: false,
+      ));
+    }
+  }
+
+  Future<void> _onSaveWheelResult(
+    SaveWheelResult event,
+    Emitter<SpinwheelState> emit,
+  ) async {
+    try {
+      await WheelRepository.saveWheelResult(
+        winnerId: event.winnerId,
+        winnerName: event.winnerName,
+        classId: event.classId,
+      );
+    } catch (error) {
+      emit(state.copyWith(
+        error: 'Failed to save wheel result: $error',
+      ));
+    }
   }
 
   @override
