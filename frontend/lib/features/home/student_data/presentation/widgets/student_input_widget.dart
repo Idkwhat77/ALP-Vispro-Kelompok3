@@ -47,7 +47,7 @@ class StudentInputWidget extends StatelessWidget {
                       ? null
                       : () {
                           context.read<StudentBloc>().add(
-                                AddStudentEvent(controller.text),
+                                AddStudentEvent(controller.text, 1), // Default class ID
                               );
                           controller.clear();
                         },

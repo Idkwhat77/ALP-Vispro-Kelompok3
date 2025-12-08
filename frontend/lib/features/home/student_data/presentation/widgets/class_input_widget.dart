@@ -39,7 +39,7 @@ class ClassInputWidget extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 context.read<StudentBloc>().add(
-                      SaveClassEvent(controller.text),
+                      SaveClassEvent(controller.text, 1), // Default teacher ID
                     );
                 controller.clear();
               },

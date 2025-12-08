@@ -10,7 +10,7 @@ import '../widgets/spinwheel_widget.dart';
 import '../widgets/spinwheel_controls.dart';
 import '../widgets/spin_button.dart';
 import '../widgets/selected_dialog.dart';
-import '../../../../services/class_generator.dart';
+import '../../../../core/models/class.dart';
 
 class SpinwheelPage extends StatefulWidget {
   const SpinwheelPage({super.key});
@@ -24,12 +24,10 @@ class _SpinwheelPageState extends State<SpinwheelPage> {
   StreamSubscription<int>? _selectedSub;
   int? _lastSelectedIndex;
   String? _lastSelectedName;
-  late final Map<String, List<String>> _classMap;
 
   @override
   void initState() {
     super.initState();
-    _classMap = ClassGenerator.buildAll();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final bloc = context.read<SpinwheelBloc>();
       _selectedSub = bloc.selectedStream.listen((index) {
@@ -60,10 +58,10 @@ class _SpinwheelPageState extends State<SpinwheelPage> {
   }
 
   void _onShuffle() => context.read<SpinwheelBloc>().add(const ShuffleItems());
-  void _onLoadClass(String? key) {
-    if (key == null) return;
-    final items = _classMap[key] ?? [];
-    context.read<SpinwheelBloc>().add(LoadClass(items));
+  
+  void _onLoadClass(ClassModel? selectedClass) {
+    if (selectedClass == null) return;
+    context.read<SpinwheelBloc>().add(LoadStudentsFromClass(selectedClass.classesId));
   }
 
   void _onToggleRemove(bool v) =>
@@ -77,6 +75,21 @@ class _SpinwheelPageState extends State<SpinwheelPage> {
 
     final name = _lastSelectedName ?? 'Item $idx';
     showDialog(context: context, builder: (_) => SelectedDialog(name: name));
+
+    // Extract winner information and save result
+    if (_lastSelectedName != null && bloc.state.selectedClass != null) {
+      final parts = _lastSelectedName!.split(' - ');
+      if (parts.length >= 2) {
+        final winnerName = parts[0];
+        final winnerId = parts[1]; // This is the NIM
+        
+        bloc.add(SaveWheelResult(
+          winnerId: winnerId,
+          winnerName: winnerName,
+          classId: bloc.state.selectedClass!.classesId,
+        ));
+      }
+    }
 
     _lastSelectedIndex = null;
     _lastSelectedName = null;
@@ -113,6 +126,18 @@ class _SpinwheelPageState extends State<SpinwheelPage> {
             final items = state.items;
             final bloc = context.read<SpinwheelBloc>();
 
+            // Show error message if any
+            if (state.error != null) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.error!),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              });
+            }
+
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -123,6 +148,8 @@ class _SpinwheelPageState extends State<SpinwheelPage> {
                     onAdd: _onAdd,
                     onLoadClass: _onLoadClass,
                     onToggleRemove: _onToggleRemove,
+                    classes: state.classes,
+                    isLoading: state.isLoading,
                   ),
 
                   const SizedBox(height: 12),

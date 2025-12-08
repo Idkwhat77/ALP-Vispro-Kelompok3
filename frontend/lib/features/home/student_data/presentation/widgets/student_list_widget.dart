@@ -36,10 +36,10 @@ class StudentListWidget extends StatelessWidget {
                     itemCount: state.students.length,
                     separatorBuilder: (_, __) => const Divider(height: 1),
                     itemBuilder: (context, index) {
-                      final name = state.students[index];
+                      final student = state.students[index];
 
                       return ListTile(
-                        title: Text(name),
+                        title: Text(student.studentName),
                         contentPadding: EdgeInsets.zero,
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -48,7 +48,7 @@ class StudentListWidget extends StatelessWidget {
                               icon: const Icon(Icons.edit_outlined),
                               onPressed: () async {
                                 final controller =
-                                    TextEditingController(text: name);
+                                    TextEditingController(text: student.studentName);
 
                                 final newValue = await showDialog<String?>(
                                   context: context,
@@ -77,8 +77,9 @@ class StudentListWidget extends StatelessWidget {
                                     newValue.trim().isNotEmpty) {
                                   bloc.add(
                                     EditStudentEvent(
-                                      index: index,
+                                      studentId: student.idStudents,
                                       newName: newValue.trim(),
+                                      classId: student.classesId,
                                     ),
                                   );
                                 }
