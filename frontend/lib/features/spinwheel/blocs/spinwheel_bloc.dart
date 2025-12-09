@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:bloc/bloc.dart';
+import '../../../core/models/class.dart';
 import '../../../core/repositories/class_repository.dart';
 import '../../../core/repositories/student_repository.dart';
 import '../../../core/repositories/wheel_repository.dart';
@@ -143,9 +144,19 @@ class SpinwheelBloc extends Bloc<SpinwheelEvent, SpinwheelState> {
       // Convert students to spinwheel items
       final items = students.map((student) => '${student.studentName} - ${student.idStudents}').toList();
       
+      // Find the selected class in the classes list
+      ClassModel? selectedClass;
+      try {
+        selectedClass = state.classes.firstWhere((c) => c.classesId == event.classId);
+      } catch (e) {
+        // If class not found in current list, create a temporary one or fetch it
+        print('Class not found in current list: $event.classId');
+        selectedClass = null;
+      }
+      
       emit(state.copyWith(
         items: items,
-        selectedClass: state.classes.firstWhere((c) => c.classesId == event.classId),
+        selectedClass: selectedClass,
         isLoading: false,
       ));
     } catch (error) {
@@ -162,8 +173,7 @@ class SpinwheelBloc extends Bloc<SpinwheelEvent, SpinwheelState> {
   ) async {
     try {
       await WheelRepository.saveWheelResult(
-        winnerId: event.winnerId,
-        winnerName: event.winnerName,
+        result: event.winnerName,
         classId: event.classId,
       );
     } catch (error) {

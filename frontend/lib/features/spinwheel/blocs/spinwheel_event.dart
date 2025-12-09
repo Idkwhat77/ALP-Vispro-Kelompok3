@@ -74,13 +74,11 @@ class LoadStudentsFromClass extends SpinwheelEvent {
 
 class SaveWheelResult extends SpinwheelEvent {
   final int classId;
-  final String winnerId;
   final String winnerName;
   const SaveWheelResult({
     required this.classId, 
-    required this.winnerId,
     required this.winnerName,
   });
   @override
-  List<Object?> get props => [classId, winnerId, winnerName];
+  List<Object?> get props => [classId, winnerName];
 }

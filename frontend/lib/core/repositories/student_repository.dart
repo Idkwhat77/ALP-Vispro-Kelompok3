@@ -7,7 +7,7 @@ class StudentRepository {
   // Get all students
   static Future<List<StudentModel>> getStudents() async {
     try {
-      final response = await ApiService.get('/students');
+      final response = await ApiService.get('/students', useAuth: true);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -28,19 +28,17 @@ class StudentRepository {
     return getStudentsByClassId(classId);
   }
 
-  // Get students by class ID (alias for compatibility)
+  // Get students by class ID (uses dedicated endpoint for all students in a class)
   static Future<List<StudentModel>> getStudentsByClassId(int classId) async {
     try {
-      final response = await ApiService.get('/students');
+      // Use the dedicated endpoint that returns all students for a class
+      final response = await ApiService.get('/students/by-class/$classId', useAuth: true);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
           final List<dynamic> studentsData = data['data'];
-          final allStudents = studentsData.map((json) => StudentModel.fromJson(json)).toList();
-          
-          // Filter by class ID
-          return allStudents.where((student) => student.classesId == classId).toList();
+          return studentsData.map((json) => StudentModel.fromJson(json)).toList();
         }
       }
       return [];
@@ -56,7 +54,7 @@ class StudentRepository {
       final response = await ApiService.post('/students', {
         'student_name': studentName,
         'classes_id': classId,
-      });
+      }, useAuth: true);
 
       if (response.statusCode == 201) {
         final data = json.decode(response.body);
@@ -77,7 +75,7 @@ class StudentRepository {
       final response = await ApiService.put('/students/$studentId', {
         'student_name': studentName,
         'classes_id': classId,
-      });
+      }, useAuth: true);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -95,8 +93,8 @@ class StudentRepository {
   // Delete student
   static Future<bool> deleteStudent(int studentId) async {
     try {
-      final response = await ApiService.delete('/students/$studentId');
-      return response.statusCode == 204 || response.statusCode == 200;
+      final response = await ApiService.delete('/students/$studentId', useAuth: true);
+      return response.statusCode == 200 || response.statusCode == 204;
     } catch (e) {
       print('Delete student error: $e');
       return false;

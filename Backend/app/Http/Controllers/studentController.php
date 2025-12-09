@@ -35,6 +35,36 @@ class StudentController extends Controller
     }
 
     /**
+     * Get all students (for spinwheel and other features that need all students)
+     */
+    public function getAllStudents(): JsonResponse
+    {
+        $students = Student::with('student_to_classes')->get();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $students,
+            'message' => 'All students retrieved successfully.'
+        ]);
+    }
+
+    /**
+     * Get students by class ID (returns all students in that class, regardless of owner)
+     */
+    public function getByClassId(int $classId): JsonResponse
+    {
+        $students = Student::with('student_to_classes')
+            ->where('classes_id', $classId)
+            ->get();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $students,
+            'message' => 'Students for class retrieved successfully.'
+        ]);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request): JsonResponse

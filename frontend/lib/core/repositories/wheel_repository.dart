@@ -6,16 +6,14 @@ class WheelRepository {
   
   // Create new wheel entry (save spin result)
   static Future<void> saveWheelResult({
-    required String winnerId,
-    required String winnerName, 
+    required String result,
     required int classId,
   }) async {
     try {
       final response = await ApiService.post(
         '/wheels',
         {
-          'winner_id': winnerId,
-          'winner_name': winnerName,
+          'result': result,
           'classes_id': classId,
         },
         useAuth: true,
@@ -35,8 +33,11 @@ class WheelRepository {
       final response = await ApiService.get('/wheels', useAuth: true);
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        return data.map((json) => WheelModel.fromJson(json)).toList();
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          final List<dynamic> wheelsData = data['data'];
+          return wheelsData.map((json) => WheelModel.fromJson(json)).toList();
+        }
       }
       return [];
     } catch (e) {
@@ -57,7 +58,9 @@ class WheelRepository {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        return WheelModel.fromJson(data);
+        if (data['success'] == true) {
+          return WheelModel.fromJson(data['data']);
+        }
       }
       return null;
     } catch (e) {

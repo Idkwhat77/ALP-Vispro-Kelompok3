@@ -11,13 +11,30 @@ use App\Http\Controllers\GameSessionController;
 use App\Http\Controllers\GameSessionWordsController;
 use App\Http\Controllers\HistoryController;
 
+// Handle preflight OPTIONS requests
+Route::options('{any}', function (Request $request) {
+    return response()->json([], 200);
+})->where('any', '.*');
+
 // Authentication routes for admin panel
 Route::post('/admin/login', [TeacherController::class, 'login']);
 Route::post('/admin/logout', [TeacherController::class, 'logout'])->middleware('auth:sanctum');
 Route::get('/admin/me', [TeacherController::class, 'me'])->middleware('auth:sanctum');
 
+// Temporary public endpoint to test connectivity
+Route::get('/test-classes', [ClassesController::class, 'getAllClasses']);
+
 // Protected routes for admin panel (require authentication)
 Route::middleware('auth:sanctum')->group(function () {
+    // Custom routes first (before apiResource to avoid conflicts)
+    Route::get('/classes/all', [ClassesController::class, 'getAllClasses']);
+    Route::get('/classes/other', [ClassesController::class, 'getOtherClasses']);
+    Route::get('/students/all', [StudentController::class, 'getAllStudents']);
+    Route::get('/students/by-class/{classId}', [StudentController::class, 'getByClassId']);
+    Route::get('/teachers/{teacher}/can-edit-class/{class}', [TeacherController::class, 'canEditClass']);
+    Route::get('/teachers/view-all-classes', [TeacherController::class, 'viewAllClasses']);
+    
+    // Standard RESTful resources
     Route::apiResource('teachers', TeacherController::class);
     Route::apiResource('classes', ClassesController::class);
     Route::apiResource('students', StudentController::class);
@@ -27,10 +44,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('game-sessions', GameSessionController::class);
     Route::apiResource('game-session-words', GameSessionWordsController::class);
     Route::apiResource('history', HistoryController::class);
-    Route::get('/teachers/{teacher}/can-edit-class/{class}', [TeacherController::class, 'canEditClass']);
-    Route::get('/teachers/view-all-classes', [TeacherController::class, 'viewAllClasses']);
-    Route::get('/classes/other', [ClassesController::class, 'getOtherClasses']);
-    Route::get('/classes/all', [ClassesController::class, 'getAllClasses']);
 });
 
 Route::get('/user', function (Request $request) {
