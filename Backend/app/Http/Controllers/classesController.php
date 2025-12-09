@@ -19,22 +19,22 @@ class ClassesController extends Controller
         $user = $request->user();
         
         if ($user) {
-            // If authenticated, show teacher's own classes first, then others (view-only)
-            $ownClasses = Classes::where('teacher_id', $user->teacher_id)->get();
-            $otherClasses = Classes::where('teacher_id', '!=', $user->teacher_id)->get();
+            // If authenticated, get all classes but prioritize teacher's own classes
+            $ownClasses = Classes::with('teacher')->where('teacher_id', $user->teacher_id)->get();
+            $otherClasses = Classes::with('teacher')->where('teacher_id', '!=', $user->teacher_id)->get();
+            
+            // Combine all classes for consistent response format
+            $allClasses = $ownClasses->concat($otherClasses);
             
             return response()->json([
                 'success' => true,
-                'data' => [
-                    'own_classes' => $ownClasses,
-                    'other_classes' => $otherClasses
-                ],
+                'data' => $allClasses,
                 'message' => 'Classes retrieved successfully.'
             ]);
         }
         
         // If not authenticated, show all (for API usage)
-        $classes = Classes::all();
+        $classes = Classes::with('teacher')->get();
         return response()->json([
             'success' => true,
             'data' => $classes,
@@ -71,6 +71,8 @@ class ClassesController extends Controller
             'teacher_id' => $teacherId,
             'class_name' => $request->class_name
         ]);
+        
+        $class->load('teacher');
         
         return response()->json([
             'success' => true,
@@ -123,6 +125,7 @@ class ClassesController extends Controller
      */
     public function show(Classes $class): JsonResponse
     {
+        $class->load('teacher');
         return response()->json([
             'success' => true,
             'data' => $class,
@@ -150,6 +153,7 @@ class ClassesController extends Controller
         ]);
         
         $class->update($request->only(['class_name']));
+        $class->load('teacher');
         
         return response()->json([
             'success' => true,

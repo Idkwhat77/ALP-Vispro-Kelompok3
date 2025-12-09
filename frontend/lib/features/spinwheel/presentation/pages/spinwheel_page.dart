@@ -102,10 +102,8 @@ class _SpinwheelPageState extends State<SpinwheelPage> {
       final parts = _lastSelectedName!.split(' - ');
       if (parts.length >= 2) {
         final winnerName = parts[0];
-        final winnerId = parts[1]; // This is the NIM
         
         bloc.add(SaveWheelResult(
-          winnerId: winnerId,
           winnerName: winnerName,
           classId: bloc.state.selectedClass!.classesId,
         ));

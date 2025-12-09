@@ -12,7 +12,8 @@ class ClassRepository {
   // Get all classes (alias for compatibility)
   static Future<List<ClassModel>> getAllClasses() async {
     try {
-      final response = await ApiService.get('/classes');
+      // Use the authenticated endpoint
+      final response = await ApiService.get('/classes/all', useAuth: true);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -21,6 +22,7 @@ class ClassRepository {
           return classesData.map((json) => ClassModel.fromJson(json)).toList();
         }
       }
+      print('Classes API response: ${response.statusCode} - ${response.body}');
       return [];
     } catch (e) {
       print('Get classes error: $e');
@@ -31,7 +33,7 @@ class ClassRepository {
   // Get class by ID
   static Future<ClassModel?> getClassById(int classId) async {
     try {
-      final response = await ApiService.get('/classes/$classId');
+      final response = await ApiService.get('/classes/$classId', useAuth: true);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -52,7 +54,7 @@ class ClassRepository {
       final response = await ApiService.post('/classes', {
         'class_name': className,
         'teacher_id': teacherId,
-      });
+      }, useAuth: true);
 
       if (response.statusCode == 201) {
         final data = json.decode(response.body);
@@ -72,7 +74,7 @@ class ClassRepository {
     try {
       final response = await ApiService.put('/classes/$classId', {
         'class_name': className,
-      });
+      }, useAuth: true);
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -90,7 +92,7 @@ class ClassRepository {
   // Delete class
   static Future<bool> deleteClass(int classId) async {
     try {
-      final response = await ApiService.delete('/classes/$classId');
+      final response = await ApiService.delete('/classes/$classId', useAuth: true);
       return response.statusCode == 204 || response.statusCode == 200;
     } catch (e) {
       print('Delete class error: $e');

@@ -27,6 +27,12 @@ class Teacher extends Authenticatable
     public $incrementing = true;
     protected $keyType = 'integer';
 
+    // Route model binding key
+    public function getRouteKeyName()
+    {
+        return 'teacher_id';
+    }
+
     public function classes(): HasMany
     {
         return $this->hasMany(Classes::class, 'teacher_id', 'teacher_id');

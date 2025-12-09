@@ -20,4 +20,10 @@ public function student_to_classes(): BelongsTo
     protected $primaryKey = 'id_students';
     public $incrementing = true;
     protected $keyType = 'integer';
+
+    // Route model binding key
+    public function getRouteKeyName()
+    {
+        return 'id_students';
+    }
 }

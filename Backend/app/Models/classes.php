@@ -36,4 +36,10 @@ class Classes extends Model
     protected $primaryKey = 'classes_id';
     public $incrementing = true;
     protected $keyType = 'integer';
+
+    // Route model binding key
+    public function getRouteKeyName()
+    {
+        return 'classes_id';
+    }
 }

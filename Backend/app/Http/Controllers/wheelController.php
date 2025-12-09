@@ -33,7 +33,13 @@ class WheelController extends Controller
         ]);
         
         $wheel = Wheel::create($validated);
-        return response()->json(["message" => "Data telah ditambahkan", "data" => $wheel], 201);
+        $wheel->load('class');
+        
+        return response()->json([
+            'success' => true,
+            'data' => $wheel,
+            'message' => 'Wheel result saved successfully.'
+        ], 201);
     }
 
     /**
@@ -60,7 +66,13 @@ class WheelController extends Controller
         ]);
 
         $wheel->update($validated);
-        return response()->json(["message" => "Wheel telah diperbarui", "data" => $wheel], 200);
+        $wheel->load('class');
+        
+        return response()->json([
+            'success' => true,
+            'data' => $wheel,
+            'message' => 'Wheel updated successfully.'
+        ], 200);
     }
 
     /**
@@ -75,9 +87,15 @@ class WheelController extends Controller
             // Now delete the wheel
             $wheel->delete();
             
-            return response()->json(null, 204);
+            return response()->json([
+                'success' => true,
+                'message' => 'Wheel deleted successfully.'
+            ], 200);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to delete wheel due to related records'], 500);
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to delete wheel due to related records'
+            ], 500);
         }
     }
 }

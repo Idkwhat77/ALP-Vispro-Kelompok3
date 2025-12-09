@@ -17,6 +17,12 @@ class Wheel extends Model
     public $incrementing = true;
     protected $keyType = 'integer';
 
+    // Route model binding key
+    public function getRouteKeyName()
+    {
+        return 'id_wheel';
+    }
+
     public function histories(): HasMany
     {
         return $this->hasMany(History::class, 'wheel_id', 'id_wheel');
