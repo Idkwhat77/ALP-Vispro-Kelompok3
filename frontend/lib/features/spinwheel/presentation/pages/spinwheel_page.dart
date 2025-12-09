@@ -163,15 +163,23 @@ class _SpinwheelPageState extends State<SpinwheelPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Controls row
-                  SpinwheelControls(
-                    controller: _controller,
-                    removeOnSelect: state.removeOnSelect,
-                    onAdd: _onAdd,
-                    onLoadClass: _onLoadClass,
-                    onToggleRemove: _onToggleRemove,
-                    classes: state.classes,
-                    isLoading: state.isLoading,
-                  ),
+                 SpinwheelControls(
+                  controller: _controller,
+                  removeOnSelect: state.removeOnSelect,
+                  onAdd: () => context.read<SpinwheelBloc>().add(AddItem(_controller.text)),
+                  onLoadClass: (classModel) {
+                    context.read<SpinwheelBloc>().add(
+                      LoadStudentsFromClass(classModel!.classesId),
+                    );
+                  },
+                  onToggleRemove: (value) {
+                    context.read<SpinwheelBloc>().add(ToggleRemoveOnSelect(value));
+                  },
+                  classes: state.classes,
+                  selectedClass: state.selectedClass, 
+                  isLoading: state.isLoading,
+                ),
+
 
                   const SizedBox(height: 12),
 
