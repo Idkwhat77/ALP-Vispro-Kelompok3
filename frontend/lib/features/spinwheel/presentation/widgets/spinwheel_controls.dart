@@ -15,7 +15,7 @@ class SpinwheelControls extends StatelessWidget {
   final OnLoadClass onLoadClass;
   final OnToggleRemove onToggleRemove;
   final List<ClassModel>? classes;
-  final ClassModel? selectedClass; // ← Tambahan penting
+  final ClassModel? selectedClass; 
   final bool isLoading;
 
   const SpinwheelControls({

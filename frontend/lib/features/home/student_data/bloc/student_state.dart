@@ -2,17 +2,16 @@ import 'package:frontend/core/models/student.dart';
 import 'package:frontend/core/models/class.dart';
 
 class StudentState {
-  final String className;
-  final List<StudentModel> students;
   final List<ClassModel> classes;
+  final List<StudentModel> students;
   final ClassModel? selectedClass;
+
   final bool isLoading;
   final String? error;
 
   StudentState({
-    required this.className,
-    required this.students,
     required this.classes,
+    required this.students,
     this.selectedClass,
     this.isLoading = false,
     this.error,
@@ -20,9 +19,8 @@ class StudentState {
 
   factory StudentState.initial() {
     return StudentState(
-      className: "",
-      students: [],
       classes: [],
+      students: [],
       selectedClass: null,
       isLoading: false,
       error: null,
@@ -30,17 +28,15 @@ class StudentState {
   }
 
   StudentState copyWith({
-    String? className,
-    List<StudentModel>? students,
     List<ClassModel>? classes,
+    List<StudentModel>? students,
     ClassModel? selectedClass,
     bool? isLoading,
     String? error,
   }) {
     return StudentState(
-      className: className ?? this.className,
-      students: students ?? this.students,
       classes: classes ?? this.classes,
+      students: students ?? this.students,
       selectedClass: selectedClass ?? this.selectedClass,
       isLoading: isLoading ?? this.isLoading,
       error: error ?? this.error,
