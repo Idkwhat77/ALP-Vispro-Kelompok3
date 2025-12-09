@@ -4,13 +4,18 @@ import '../models/teacher.dart';
 
 class AuthRepository {
   
-  // Teacher login for admin panel
+  // Teacher login 
   static Future<LoginResponse?> login(String email, String password) async {
     try {
-      final response = await ApiService.post('/admin/login', {
-        'email': email,
-        'password': password,
-      }, useAuth: false);
+      final response = await ApiService.post(
+        '/admin/login',
+        {
+          'email': email,
+          'password': password,
+        },
+        useAuth: false,
+      );
+
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -50,7 +55,11 @@ class AuthRepository {
   // Logout
   static Future<bool> logout() async {
     try {
-      final response = await ApiService.post('/admin/logout', {}, useAuth: true);
+      final response = await ApiService.post(
+        '/admin/logout',
+        {},
+        useAuth: true,
+      );
       
       // Remove token regardless of response
       await ApiService.removeAuthToken();

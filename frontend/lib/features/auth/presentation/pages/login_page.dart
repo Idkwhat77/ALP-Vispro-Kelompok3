@@ -217,7 +217,7 @@ class LoginPage extends StatelessWidget {
                     top: 640,
                     child: GestureDetector (
                       onTap: () {
-                      context.go('/tools'); 
+                      context.read<LoginBloc>().add(LoginSubmitted());
                     },
                     child: SizedBox(
                       width: 61.39,
