@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/models/class.dart';
+import '../../blocs/spinwheel_bloc.dart';
+import '../../blocs/spinwheel_event.dart';
 
 typedef OnAdd = void Function();
 typedef OnLoadClass = void Function(ClassModel? value);
@@ -12,6 +15,7 @@ class SpinwheelControls extends StatelessWidget {
   final OnLoadClass onLoadClass;
   final OnToggleRemove onToggleRemove;
   final List<ClassModel>? classes;
+  final ClassModel? selectedClass; // ← Tambahan penting
   final bool isLoading;
 
   const SpinwheelControls({
@@ -21,7 +25,8 @@ class SpinwheelControls extends StatelessWidget {
     required this.onAdd,
     required this.onLoadClass,
     required this.onToggleRemove,
-    this.classes,
+    required this.classes,
+    required this.selectedClass,
     this.isLoading = false,
   });
 
@@ -41,9 +46,13 @@ class SpinwheelControls extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Dropdown kelas
+
+          // ==========================
+          // DROPDOWN KELAS
+          // ==========================
           DropdownButtonFormField<ClassModel>(
             isExpanded: true,
+            value: selectedClass, // ← INI FIX UTAMA
             dropdownColor: Colors.white,
             decoration: InputDecoration(
               filled: true,
@@ -52,9 +61,11 @@ class SpinwheelControls extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               contentPadding: const EdgeInsets.symmetric(
-                  horizontal:12, vertical: 10),
+                horizontal: 12,
+                vertical: 10,
+              ),
             ),
-            hint: isLoading 
+            hint: isLoading
                 ? const Row(
                     children: [
                       SizedBox(
@@ -67,18 +78,26 @@ class SpinwheelControls extends StatelessWidget {
                     ],
                   )
                 : const Text("Pilih kelas"),
-            onChanged: isLoading ? null : onLoadClass,
-            items: classes
-                ?.map((classModel) => DropdownMenuItem<ClassModel>(
-                      value: classModel,
-                      child: Text(classModel.className),
-                    ))
-                .toList() ?? [],
+
+            onChanged: isLoading ? null : (ClassModel? selected) {
+              if (selected != null) {
+                onLoadClass(selected);
+              }
+            },
+
+            items: classes?.map((classModel) {
+              return DropdownMenuItem<ClassModel>(
+                value: classModel,
+                child: Text(classModel.className),
+              );
+            }).toList() ?? [],
           ),
 
           const SizedBox(height: 12),
 
-          // Input + Add button
+          // ==========================
+          // INPUT + ADD BUTTON
+          // ==========================
           Row(
             children: [
               Expanded(
@@ -119,7 +138,9 @@ class SpinwheelControls extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // Toggle removeOnSelect
+          // ==========================
+          // TOGGLE REMOVE ITEM
+          // ==========================
           Row(
             children: [
               Switch(
