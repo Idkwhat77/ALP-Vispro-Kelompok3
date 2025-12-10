@@ -12,7 +12,8 @@ class TeachersSeeder extends Seeder
     {
         $teachers = [
             [
-                'username' => 'alice wonderland',
+                'username' => 'alice',
+                'fullname' => 'Alice Wonderland',
                 'email' => 'alice@example.com',
                 'password' => Hash::make('password'),
                 'specialist' => 'Mathematics',
@@ -20,7 +21,8 @@ class TeachersSeeder extends Seeder
                 'picture_mime' => 'image/png',
             ],
             [
-                'username' => 'bob tarigan',
+                'username' => 'bob',
+                'fullname' => 'Bob Nasal',
                 'email' => 'bob@example.com',
                 'password' => Hash::make('password'),
                 'specialist' => 'Physics',
@@ -28,7 +30,8 @@ class TeachersSeeder extends Seeder
                 'picture_mime' => 'image/jpeg',
             ],
             [
-                'username' => 'carol caroline',
+                'username' => 'carol',
+                'fullname' => 'Carol Sinusitis',
                 'email' => 'carol@example.com',
                 'password' => Hash::make('password'),
                 'specialist' => 'Chemistry',
@@ -36,7 +39,8 @@ class TeachersSeeder extends Seeder
                 'picture_mime' => 'image/jpeg',
             ],
             [
-                'username' => 'dave jackson',
+                'username' => 'dave',
+                'fullname' => 'Dave Harley',
                 'email' => 'dave@example.com',
                 'password' => Hash::make('password'),
                 'specialist' => 'Biology',
@@ -44,7 +48,8 @@ class TeachersSeeder extends Seeder
                 'picture_mime' => 'image/jpeg',
             ],
             [
-                'username' => 'eve evelyn',
+                'username' => 'eve',
+                'fullname' => 'Eve Evelyn',
                 'email' => 'eve@example.com',
                 'password' => Hash::make('password'),
                 'specialist' => 'English',
