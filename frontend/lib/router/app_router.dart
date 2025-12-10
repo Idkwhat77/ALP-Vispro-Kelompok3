@@ -6,33 +6,42 @@ import 'package:go_router/go_router.dart';
 
 import '../features/home/student_data/bloc/student_bloc.dart';
 import '../features/profile/presentation/pages/profile_page.dart';
+import '../features/splash/bloc/splash_bloc.dart';
 import '../widgets/main_scaffold.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/home/history/presentation/pages/history_page.dart';
 import '../features/home/toolset/presentation/pages/toolset_page.dart';
 import '../features/home/student_data/presentation/pages/student_page.dart';
+import '../features/splash/presentation/pages/splash_page.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/login',
+  initialLocation: '/splash',
 
   routes: [
-    // ---------- LOGIN ROUTE ----------
-    GoRoute(
-    path: '/login',
+   GoRoute(
+    path: '/splash',
     builder: (context, state) {
       return BlocProvider(
-        create: (_) => LoginBloc(),
-        child: const LoginPage(),
+        create: (_) => SplashBloc(),
+        child: const SplashPage(),
       );
     },
   ),
 
-    // ---------- PROFILE ROUTE ----------
     GoRoute(
-    path: '/profile',
-    builder: (context, state) => const ProfilePage(),
-  ),
+      path: '/login',
+      builder: (context, state) {
+        return BlocProvider(
+          create: (_) => LoginBloc(),
+          child: const LoginPage(),
+        );
+      },
+    ),
 
+    GoRoute(
+      path: '/profile',
+      builder: (context, state) => const ProfilePage(),
+    ),
 
     // ---------- MAIN SHELL ROUTE ----------
     ShellRoute(
@@ -48,7 +57,7 @@ final GoRouter appRouter = GoRouter(
           path: '/tools',
           builder: (context, state) => const ToolsetPage(),
         ),
-       GoRoute(
+        GoRoute(
           path: '/students',
           builder: (context, state) {
             return BlocProvider(
