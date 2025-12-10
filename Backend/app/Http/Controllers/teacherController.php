@@ -56,6 +56,7 @@ class TeacherController extends Controller
     {
         $validated = $request->validate([
             'username' => 'required|string|max:255',
+            'fullname' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:teachers',
             'password' => 'required|string|min:8',
             'specialist' => 'required|string|max:255',
@@ -96,6 +97,7 @@ class TeacherController extends Controller
     {
         $validated = $request->validate([
             'username' => 'sometimes|string|max:255',
+            'fullname' => 'sometimes|string|max:255',
             'email' => 'sometimes|string|email|max:255|unique:teachers,email,' . $teacher->teacher_id . ',teacher_id',
             'password' => 'sometimes|string|min:8',
             'specialist' => 'nullable|string|max:255',
