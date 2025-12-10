@@ -20,7 +20,9 @@ class LoginPage extends StatelessWidget {
 
         if (state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.error!)),
+            SnackBar(
+              backgroundColor: Colors.red,
+              content: Text(state.error!)),
           );
         }
       },

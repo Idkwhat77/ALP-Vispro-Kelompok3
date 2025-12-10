@@ -17,7 +17,7 @@ class MainScaffold extends StatelessWidget {
         index: _getIndexFromRoute(currentRoute),
 
         color: const Color(0xFF46178F),
-        buttonBackgroundColor: const Color(0xFF46178F),
+        buttonBackgroundColor: const Color(0xFF864CBF),
         backgroundColor: Colors.white,
 
         animationCurve: Curves.easeInOutCubic,
@@ -68,7 +68,7 @@ class MainScaffold extends StatelessWidget {
       child: Icon(
         icon,
         size: 40,
-        color: selected ? Colors.white : Colors.white70,
+        color: selected ? Colors.white : Colors.white
       ),
     );
   }

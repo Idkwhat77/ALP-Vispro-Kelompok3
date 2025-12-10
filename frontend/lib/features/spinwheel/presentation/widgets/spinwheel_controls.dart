@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/models/class.dart';
-import '../../blocs/spinwheel_bloc.dart';
-import '../../blocs/spinwheel_event.dart';
 
 typedef OnAdd = void Function();
 typedef OnLoadClass = void Function(ClassModel? value);
@@ -47,12 +44,10 @@ class SpinwheelControls extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
 
-          // ==========================
           // DROPDOWN KELAS
-          // ==========================
           DropdownButtonFormField<ClassModel>(
             isExpanded: true,
-            value: selectedClass, // ← INI FIX UTAMA
+            initialValue: selectedClass, 
             dropdownColor: Colors.white,
             decoration: InputDecoration(
               filled: true,
@@ -95,9 +90,7 @@ class SpinwheelControls extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // ==========================
           // INPUT + ADD BUTTON
-          // ==========================
           Row(
             children: [
               Expanded(
@@ -105,6 +98,12 @@ class SpinwheelControls extends StatelessWidget {
                   controller: controller,
                   decoration: InputDecoration(
                     hintText: 'Tambah item',
+                    hintStyle: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black54,
+                      fontSize: 16,
+                    ),
+                      
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -138,9 +137,7 @@ class SpinwheelControls extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // ==========================
           // TOGGLE REMOVE ITEM
-          // ==========================
           Row(
             children: [
               Switch(
