@@ -14,11 +14,34 @@ use Illuminate\Validation\ValidationException;
 class TeacherController extends Controller
 {
     /**
+     * Serve the teacher's picture as an image response.
+    */
+    public function picture(Teacher $teacher)
+    {
+        if (!$teacher->picture) {
+            // Do not display anything if no image is present
+            return response('', 204);
+        }
+
+            if (!$teacher->picture) {
+                return response()->json(['error' => 'No picture found.'], 404);
+            }
+            $mime = $teacher->picture_mime ?: 'application/octet-stream';
+            return response($teacher->picture)
+                ->header('Content-Type', $mime);
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index(): JsonResponse
     {
-        $teachers = Teacher::all();
+        $teachers = Teacher::all()->map(function ($teacher) {
+            $arr = $teacher->toArray();
+            unset($arr['picture'], $arr['picture_mime']);
+            $arr['picture_url'] = url('api/teachers/' . $teacher->teacher_id . '/picture');
+            return $arr;
+        });
         return response()->json([
             'success' => true,
             'data' => $teachers,
@@ -35,10 +58,17 @@ class TeacherController extends Controller
             'username' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:teachers',
             'password' => 'required|string|min:8',
+            'specialist' => 'required|string|max:255',
+            'picture' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp|max:2048',
         ]);
 
         // Hash the password
         $validated['password'] = Hash::make($validated['password']);
+
+        // Handle picture upload as BLOB
+        if ($request->hasFile('picture')) {
+            $validated['picture'] = file_get_contents($request->file('picture')->getRealPath());
+        }
 
         $teacher = Teacher::create($validated);
         return response()->json(["message" => "Guru telah ditambahkan", "data" => $teacher], 201);
@@ -49,9 +79,12 @@ class TeacherController extends Controller
      */
     public function show(Teacher $teacher): JsonResponse
     {
+        $arr = $teacher->toArray();
+        unset($arr['picture'], $arr['picture_mime']);
+        $arr['picture_url'] = url('api/teachers/' . $teacher->teacher_id . '/picture');
         return response()->json([
             'success' => true,
-            'data' => $teacher,
+            'data' => $arr,
             'message' => 'Teacher retrieved successfully.'
         ]);
     }
@@ -65,11 +98,18 @@ class TeacherController extends Controller
             'username' => 'sometimes|string|max:255',
             'email' => 'sometimes|string|email|max:255|unique:teachers,email,' . $teacher->teacher_id . ',teacher_id',
             'password' => 'sometimes|string|min:8',
+            'specialist' => 'nullable|string|max:255',
+            'picture' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp|max:2048',
         ]);
 
         // Hash password if provided
         if (isset($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
+        }
+
+        // Handle picture upload as BLOB
+        if ($request->hasFile('picture')) {
+            $validated['picture'] = file_get_contents($request->file('picture')->getRealPath());
         }
 
         $teacher->update($validated);

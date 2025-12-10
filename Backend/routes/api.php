@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/students/by-class/{classId}', [StudentController::class, 'getByClassId']);
     Route::get('/teachers/{teacher}/can-edit-class/{class}', [TeacherController::class, 'canEditClass']);
     Route::get('/teachers/view-all-classes', [TeacherController::class, 'viewAllClasses']);
+    Route::get('teachers/{teacher}/picture', [TeacherController::class, 'picture']);
     
     // Standard RESTful resources
     Route::apiResource('teachers', TeacherController::class);
@@ -44,9 +45,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('game-sessions', GameSessionController::class);
     Route::apiResource('game-session-words', GameSessionWordsController::class);
     Route::apiResource('history', HistoryController::class);
+    
 });
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
-
