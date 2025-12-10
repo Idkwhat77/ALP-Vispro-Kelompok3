@@ -20,7 +20,6 @@ class ProfilePage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Batal"),
             style: TextButton.styleFrom(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -28,22 +27,23 @@ class ProfilePage extends StatelessWidget {
               foregroundColor: Colors.white,
               backgroundColor: Color(0xFF1368CE),
             ),
+            child: const Text("Batal"),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               context.go('/login'); 
             },
-            child: const Text(
-              "Keluar",
-              style: TextStyle(color: Colors.white),
-            ),
             style: TextButton.styleFrom(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
               foregroundColor: Colors.white,
               backgroundColor: Color(0xFFE21B3C),
+            ),
+            child: const Text(
+              "Keluar",
+              style: TextStyle(color: Colors.white),
             ),
           ),
         ],
@@ -91,9 +91,21 @@ class ProfilePage extends StatelessWidget {
 
                 // INFO
                 const ProfileTextInfo(
-                  label: "Nama",
+                  label: "Nama Lengkap",
                   value: "Kasmir Syariati",
                   icon: Icons.person,
+                ),
+
+                const ProfileTextInfo(
+                  label: "Spesialisasi Guru",
+                  value: "Informatika",
+                  icon: Icons.school,
+                ),
+
+                const ProfileTextInfo(
+                  label: "Username",
+                  value: "kasmir_syariati",
+                  icon: Icons.account_circle_outlined,
                 ),
 
                 const ProfileTextInfo(
