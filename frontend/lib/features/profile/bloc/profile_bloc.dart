@@ -1,24 +1,43 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/repositories/auth_repository.dart';
 
 import 'profile_event.dart';
 import 'profile_state.dart';
 
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
-  ProfileBloc() : super(ProfileState.initial()) {
+  ProfileBloc() : super(const ProfileState()) {
     on<LoadProfile>(_onLoadProfile);
     on<LogoutPressed>(_onLogout);
   }
 
-  void _onLoadProfile(LoadProfile event, Emitter<ProfileState> emit) {
-    // Dummy Data (ganti dengan data dari API/Local Storage)
-    emit(ProfileState(
-      name: "Kasmir Syariatii",
-      email: "kasmir@example.com",
-      photoUrl: "https://i.pravatar.cc/150",
-    ));
+  Future<void> _onLoadProfile(LoadProfile event, Emitter<ProfileState> emit) async {
+    emit(state.copyWith(status: ProfileStatus.loading));
+    
+    try {
+      final teacher = await AuthRepository.getCurrentUser();
+      
+      if (teacher != null) {
+        emit(state.copyWith(
+          status: ProfileStatus.loaded,
+          name: teacher.fullname,
+          email: teacher.email,
+          photoUrl: teacher.pictureUrl,
+        ));
+      } else {
+        emit(state.copyWith(
+          status: ProfileStatus.error,
+          errorMessage: 'Failed to load profile data',
+        ));
+      }
+    } catch (e) {
+      emit(state.copyWith(
+        status: ProfileStatus.error,
+        errorMessage: 'Error: $e',
+      ));
+    }
   }
 
-  void _onLogout(LogoutPressed event, Emitter<ProfileState> emit) {
-    // Handle log out (hapus token, navigate, dll)
+  Future<void> _onLogout(LogoutPressed event, Emitter<ProfileState> emit) async {
+    await AuthRepository.logout();
   }
 }

@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 
+import '../../../../../core/models/teacher.dart';
+import '../../../../../core/repositories/auth_repository.dart';
 import '../../bloc/toolset_bloc.dart';
 import '../../bloc/toolset_event.dart';
 import '../../bloc/toolset_state.dart';
@@ -27,6 +29,10 @@ class _ToolsetPageState extends State<ToolsetPage> {
   // OPACITY khusus overlay Coming Soon 
   double comingSoonOpacity = 0.7;
 
+  // Teacher data from backend
+  Teacher? _teacher;
+  bool _isLoading = true;
+
   @override
   void initState() {
     super.initState();
@@ -35,6 +41,27 @@ class _ToolsetPageState extends State<ToolsetPage> {
     _pageController.addListener(() {
       setState(() {});
     });
+
+    // Load teacher data
+    _loadTeacherData();
+  }
+
+  Future<void> _loadTeacherData() async {
+    try {
+      final teacher = await AuthRepository.getCurrentUser();
+      if (mounted) {
+        setState(() {
+          _teacher = teacher;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -67,24 +94,65 @@ class _ToolsetPageState extends State<ToolsetPage> {
                     onTap: () {
                       context.go('/profile'); 
                     },
-                    child: const CircleAvatar(
+                    child: CircleAvatar(
                       radius: 26,
-                      backgroundColor: Color(0xFF46178F),
-                      child: Icon(Icons.person, color: Colors.white, size: 26),
+                      backgroundColor: const Color(0xFF46178F),
+                      backgroundImage: (_teacher?.pictureUrl != null && _teacher!.pictureUrl!.isNotEmpty)
+                          ? NetworkImage(_teacher!.pictureUrl!)
+                          : null,
+                      child: (_teacher?.pictureUrl == null || _teacher!.pictureUrl!.isEmpty)
+                          ? const Icon(Icons.person, color: Colors.white, size: 26)
+                          : null,
                     ),
                   ),
                   const SizedBox(width: 14),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text("Kasmir Syariati",
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w500)),
-                      SizedBox(height: 4),
-                      Text("Guru Informatika",
-                          style: TextStyle(fontSize: 12, color: Colors.grey)),
-                    ],
-                  ),
+                  _isLoading
+                      ? Shimmer.fromColors(
+                          baseColor: Colors.grey.shade300,
+                          highlightColor: Colors.grey.shade100,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 120,
+                                height: 16,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                width: 80,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _teacher?.fullname ?? 'Guest',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _teacher?.specialist ?? 'Teacher',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
                 ],
               ),
             ),
