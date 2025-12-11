@@ -21,8 +21,8 @@ class SpinwheelHeader extends StatelessWidget {
             "Daftar Item",
             style: TextStyle(
               fontSize: 20,
-              fontWeight: FontWeight.w400,
-              color: Colors.grey[800],
+              fontWeight: FontWeight.w500,
+              color: Colors.black,
             ),
           ),
           Row(

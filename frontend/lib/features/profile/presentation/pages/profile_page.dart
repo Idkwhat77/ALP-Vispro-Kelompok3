@@ -50,6 +50,10 @@ class ProfilePage extends StatelessWidget {
               "Keluar",
               style: TextStyle(color: Colors.white),
             ),
+            child: const Text(
+              "Keluar",
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),

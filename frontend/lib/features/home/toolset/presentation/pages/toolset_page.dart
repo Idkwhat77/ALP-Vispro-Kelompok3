@@ -202,15 +202,27 @@ class _ToolsetPageState extends State<ToolsetPage> {
                           scale: scale,
                           child: GestureDetector(
                             onTap: () {
-                              if (toolset.name == "Quiz (Coming Soon)") {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text("Quiz feature is coming soon!"),
-                                    duration: Duration(seconds: 2),
+                             if (toolset.name == "Quiz (Coming Soon)") {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  duration: const Duration(seconds: 2),
+                                  backgroundColor: Color(0xFFFFA602),
+                                  content: Container(
+                                    padding: const EdgeInsets.symmetric(vertical: 14), 
+                                    child: const Text(
+                                      "Fitur Quiz akan segera hadir!",
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600
+                                      ), 
+                                      textAlign: TextAlign.left,
+                                    ),
                                   ),
-                                );
-                                return;
-                              }
+                                ),
+                              );
+                              return;
+                            }
 
                               context
                                   .read<ToolsetBloc>()

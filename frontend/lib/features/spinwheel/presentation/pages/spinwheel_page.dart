@@ -14,7 +14,6 @@ import '../widgets/spinwheel_item_list.dart';
 import '../widgets/spinwheel_widget.dart';
 import '../widgets/spinwheel_controls.dart';
 import '../widgets/spin_button.dart';
-import '../widgets/selected_dialog.dart';
 import '../../../../core/models/class.dart';
 
 class SpinwheelPage extends StatefulWidget {
@@ -118,6 +117,9 @@ class _SpinwheelPageState extends State<SpinwheelPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         title: const Text('SpinWheel'),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -164,7 +166,7 @@ class _SpinwheelPageState extends State<SpinwheelPage> {
                  SpinwheelControls(
                   controller: _controller,
                   removeOnSelect: state.removeOnSelect,
-                  onAdd: () => context.read<SpinwheelBloc>().add(AddItem(_controller.text)),
+                  onAdd: _onAdd,
                   onLoadClass: (classModel) {
                     context.read<SpinwheelBloc>().add(
                       LoadStudentsFromClass(classModel!.classesId),

@@ -70,14 +70,35 @@ class SpinwheelItemList extends StatelessWidget {
     return await showDialog<String?>(
       context: context,
       builder: (c) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8), 
+        ),
         title: const Text('Edit Item'),
         content: TextField(controller: ctrl, autofocus: true),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(c),
-            child: const Text('Batal'),
-          ),
           ElevatedButton(
+          style: TextButton.styleFrom(
+            backgroundColor: Color(0xFFE21B3C),        
+            foregroundColor: Colors.white,        
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          ),
+          onPressed: () => Navigator.pop(c),
+          child: const Text('Batal'),
+        ),
+
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF26890C),       
+              foregroundColor: Colors.white,       
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
             onPressed: () => Navigator.pop(c, ctrl.text.trim()),
             child: const Text('Simpan'),
           ),
