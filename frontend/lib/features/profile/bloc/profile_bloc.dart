@@ -19,6 +19,8 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       if (teacher != null) {
         emit(state.copyWith(
           status: ProfileStatus.loaded,
+          username: teacher.username,
+          specialization: teacher.specialist,
           name: teacher.fullname,
           email: teacher.email,
           photoUrl: teacher.pictureUrl,
