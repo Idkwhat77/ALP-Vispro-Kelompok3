@@ -21,6 +21,9 @@ Route::post('/admin/login', [TeacherController::class, 'login']);
 Route::post('/admin/logout', [TeacherController::class, 'logout'])->middleware('auth:sanctum');
 Route::get('/admin/me', [TeacherController::class, 'me'])->middleware('auth:sanctum');
 
+// Public route for teacher pictures (no auth required for image loading)
+Route::get('teachers/{teacher}/picture', [TeacherController::class, 'picture']);
+
 // Temporary public endpoint to test connectivity
 Route::get('/test-classes', [ClassesController::class, 'getAllClasses']);
 
@@ -33,7 +36,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/students/by-class/{classId}', [StudentController::class, 'getByClassId']);
     Route::get('/teachers/{teacher}/can-edit-class/{class}', [TeacherController::class, 'canEditClass']);
     Route::get('/teachers/view-all-classes', [TeacherController::class, 'viewAllClasses']);
-    Route::get('teachers/{teacher}/picture', [TeacherController::class, 'picture']);
+    
+    // Alternative route for updating teachers with multipart/form-data
+    Route::post('/teachers/{teacher}/update', [TeacherController::class, 'update']);
     
     // Standard RESTful resources
     Route::apiResource('teachers', TeacherController::class);

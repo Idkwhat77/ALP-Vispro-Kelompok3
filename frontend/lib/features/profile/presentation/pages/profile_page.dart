@@ -50,10 +50,6 @@ class ProfilePage extends StatelessWidget {
               "Keluar",
               style: TextStyle(color: Colors.white),
             ),
-            child: const Text(
-              "Keluar",
-              style: TextStyle(color: Colors.white),
-            ),
           ),
         ],
       ),
@@ -139,6 +135,18 @@ class ProfilePage extends StatelessWidget {
                         label: "Nama",
                         value: state.name.isNotEmpty ? state.name : '-',
                         icon: Icons.person,
+                      ),
+
+                      ProfileTextInfo(
+                        label: "Spesialisasi Guru",
+                        value: state.specialization.isNotEmpty ? state.specialization : '-',
+                        icon: Icons.school,
+                      ),
+
+                      ProfileTextInfo(
+                        label: "Username",
+                        value: state.username.isNotEmpty ? state.username : '-',
+                        icon: Icons.account_circle_outlined,
                       ),
 
                       ProfileTextInfo(
