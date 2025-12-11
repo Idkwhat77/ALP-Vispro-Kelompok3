@@ -149,7 +149,10 @@ class TeacherController extends Controller
             'teacher' => [
                 'teacher_id' => $teacher->teacher_id,
                 'username' => $teacher->username,
+                'fullname' => $teacher->fullname,
                 'email' => $teacher->email,
+                'specialist' => $teacher->specialist,
+                'picture_url' => url('api/teachers/' . $teacher->teacher_id . '/picture'),
             ],
             'token' => $token
         ]);
@@ -191,7 +194,10 @@ class TeacherController extends Controller
             'teacher' => [
                 'teacher_id' => $teacher->teacher_id,
                 'username' => $teacher->username,
+                'fullname' => $teacher->fullname,
                 'email' => $teacher->email,
+                'specialist' => $teacher->specialist,
+                'picture_url' => url('api/teachers/' . $teacher->teacher_id . '/picture'),
             ]
         ]);
     }
