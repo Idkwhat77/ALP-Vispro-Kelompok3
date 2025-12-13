@@ -10,12 +10,12 @@ class ApiService {
     if (kIsWeb) {
       // IMPORTANT: Replace this IP with your actual machine's IP address
       // Find it by running: ipconfig
-      return 'http://172.20.10.2:8000/api'; // e.g., http://192.168.1.100:8000/api
+      return 'http://192.168.1.100:8000/api'; // e.g., http://192.168.1.100:8000/api
     } else if (Platform.isAndroid) {
       // For Android emulator
       return 'http://10.0.2.2:8000/api';
     } else if (Platform.isIOS) {
-      // For iOS simulator  
+      // For iOS simulator
       return 'http://localhost:8000/api';
     } else {
       // For other platforms (desktop)
@@ -27,7 +27,7 @@ class ApiService {
   static String get networkBaseUrl {
     // You need to replace this IP with your actual machine's IP address
     // Run: ipconfig (Windows) or ifconfig (Mac/Linux) to find your IP
-    return 'http://172.20.10.2:8000/api'; // Replace with your IP
+    return 'http://192.168.18.74:8000/api'; // Replace with your IP
   }
 
   static Future<String?> getAuthToken() async {
@@ -87,11 +87,7 @@ class ApiService {
       }
     }
 
-    return http.post(
-      Uri.parse(url),
-      headers: headers,
-      body: json.encode(body),
-    );
+    return http.post(Uri.parse(url), headers: headers, body: json.encode(body));
   }
 
   // PUT
@@ -114,11 +110,7 @@ class ApiService {
       }
     }
 
-    return http.put(
-      Uri.parse(url),
-      headers: headers,
-      body: json.encode(body),
-    );
+    return http.put(Uri.parse(url), headers: headers, body: json.encode(body));
   }
 
   // DELETE
