@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../blocs/charades_bloc.dart';
 import '../../blocs/charades_event.dart';
@@ -51,12 +52,31 @@ class _CharadesWidgetState extends State<CharadesWidget>
   Widget build(BuildContext context) {
     return BlocConsumer<CharadesBloc, CharadesState>(
       listener: (context, state) {
+        // Play animation for running state
         if (state is CharadesRunning) _playAnim();
+
+        // ✅ Change orientation dynamically
+        if (state is CharadesRunning) {
+          // Force landscape only while running
+          SystemChrome.setPreferredOrientations([
+            DeviceOrientation.landscapeLeft,
+            DeviceOrientation.landscapeRight,
+          ]);
+        } else {
+          // Revert to default (portrait + landscape)
+          SystemChrome.setPreferredOrientations([
+            DeviceOrientation.portraitUp,
+            DeviceOrientation.portraitDown,
+            DeviceOrientation.landscapeLeft,
+            DeviceOrientation.landscapeRight,
+          ]);
+        }
       },
       builder: (context, state) {
         if (state is CharadesLoadingThemes) {
           return const Center(child: CircularProgressIndicator());
         }
+
         if (state is CharadesThemesLoaded) {
           return CharadesIdle(
             themes: state.themes,
@@ -66,6 +86,7 @@ class _CharadesWidgetState extends State<CharadesWidget>
             palette: _palette,
           );
         }
+
         if (state is CharadesThemeSelected) {
           return Center(
             child: ElevatedButton(
@@ -83,9 +104,11 @@ class _CharadesWidgetState extends State<CharadesWidget>
             ),
           );
         }
+
         if (state is CharadesLoadingWords) {
           return const Center(child: CircularProgressIndicator());
         }
+
         if (state is CharadesRunning) {
           return CharadesRunningWidget(
             currentWord: state.currentWord,
@@ -96,6 +119,7 @@ class _CharadesWidgetState extends State<CharadesWidget>
             palette: _palette,
           );
         }
+
         if (state is CharadesGameOver) {
           return CharadesGameOverWidget(
             score: state.score,
@@ -105,9 +129,11 @@ class _CharadesWidgetState extends State<CharadesWidget>
             },
           );
         }
+
         if (state is CharadesError) {
           return Center(child: Text('Error: ${state.message}'));
         }
+
         return const SizedBox.shrink();
       },
     );
@@ -115,6 +141,13 @@ class _CharadesWidgetState extends State<CharadesWidget>
 
   @override
   void dispose() {
+    // Reset orientation to default when widget is disposed
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     _controller.dispose();
     super.dispose();
   }

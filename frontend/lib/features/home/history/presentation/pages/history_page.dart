@@ -49,7 +49,16 @@ class _HistoryPageState extends State<HistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Game History')),
+      appBar: AppBar(
+        title: const Text(
+          "History",
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+        ),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+      ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : error != null
