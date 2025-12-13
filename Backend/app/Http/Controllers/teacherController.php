@@ -69,10 +69,17 @@ class TeacherController extends Controller
         // Handle picture upload as BLOB
         if ($request->hasFile('picture')) {
             $validated['picture'] = file_get_contents($request->file('picture')->getRealPath());
+            $validated['picture_mime'] = $request->file('picture')->getMimeType();
         }
 
         $teacher = Teacher::create($validated);
-        return response()->json(["message" => "Guru telah ditambahkan", "data" => $teacher], 201);
+        
+        // Exclude binary picture data from response to avoid JSON encoding issues
+        $arr = $teacher->toArray();
+        unset($arr['picture'], $arr['picture_mime']);
+        $arr['picture_url'] = url('api/teachers/' . $teacher->teacher_id . '/picture');
+        
+        return response()->json(["message" => "Guru telah ditambahkan", "data" => $arr], 201);
     }
 
     /**
@@ -102,6 +109,7 @@ class TeacherController extends Controller
             'password' => 'sometimes|string|min:8',
             'specialist' => 'nullable|string|max:255',
             'picture' => 'nullable|file|mimes:jpg,jpeg,png,gif,webp|max:2048',
+            'picture_base64' => 'nullable|string', // For JSON requests
         ]);
 
         // Hash password if provided
@@ -109,13 +117,37 @@ class TeacherController extends Controller
             $validated['password'] = Hash::make($validated['password']);
         }
 
-        // Handle picture upload as BLOB
+        // Handle picture upload as BLOB (form-data)
         if ($request->hasFile('picture')) {
             $validated['picture'] = file_get_contents($request->file('picture')->getRealPath());
+            $validated['picture_mime'] = $request->file('picture')->getMimeType();
+        }
+        // Handle base64 picture (JSON requests)
+        elseif ($request->has('picture_base64') && $request->picture_base64) {
+            $base64Data = $request->picture_base64;
+            
+            // Extract mime type and data from base64 string
+            if (preg_match('/^data:image\/(\w+);base64,/', $base64Data, $matches)) {
+                $imageType = $matches[1];
+                $base64Data = substr($base64Data, strpos($base64Data, ',') + 1);
+                $validated['picture_mime'] = 'image/' . $imageType;
+            } else {
+                // Default mime type if not specified
+                $validated['picture_mime'] = 'image/jpeg';
+            }
+            
+            $validated['picture'] = base64_decode($base64Data);
+            unset($validated['picture_base64']); // Remove the base64 field
         }
 
         $teacher->update($validated);
-        return response()->json(["message" => "Guru telah diperbarui", "data" => $teacher], 200);
+        
+        // Exclude binary picture data from response to avoid JSON encoding issues
+        $arr = $teacher->fresh()->toArray();
+        unset($arr['picture'], $arr['picture_mime']);
+        $arr['picture_url'] = url('api/teachers/' . $teacher->teacher_id . '/picture');
+        
+        return response()->json(["message" => "Guru telah diperbarui", "data" => $arr], 200);
     }
 
     /**
@@ -149,7 +181,10 @@ class TeacherController extends Controller
             'teacher' => [
                 'teacher_id' => $teacher->teacher_id,
                 'username' => $teacher->username,
+                'fullname' => $teacher->fullname,
                 'email' => $teacher->email,
+                'specialist' => $teacher->specialist,
+                'picture_url' => url('api/teachers/' . $teacher->teacher_id . '/picture'),
             ],
             'token' => $token
         ]);
@@ -191,7 +226,10 @@ class TeacherController extends Controller
             'teacher' => [
                 'teacher_id' => $teacher->teacher_id,
                 'username' => $teacher->username,
+                'fullname' => $teacher->fullname,
                 'email' => $teacher->email,
+                'specialist' => $teacher->specialist,
+                'picture_url' => url('api/teachers/' . $teacher->teacher_id . '/picture'),
             ]
         ]);
     }

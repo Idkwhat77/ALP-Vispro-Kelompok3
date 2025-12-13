@@ -10,7 +10,7 @@ class ApiService {
     if (kIsWeb) {
       // IMPORTANT: Replace this IP with your actual machine's IP address
       // Find it by running: ipconfig
-      return 'http://192.168.1.100:8000/api'; // e.g., http://192.168.1.100:8000/api
+      return 'http://192.168.56.1:8000/api'; // e.g., http://192.168.1.100:8000/api
     } else if (Platform.isAndroid) {
       // For Android emulator
       return 'http://10.0.2.2:8000/api';
@@ -27,7 +27,7 @@ class ApiService {
   static String get networkBaseUrl {
     // You need to replace this IP with your actual machine's IP address
     // Run: ipconfig (Windows) or ifconfig (Mac/Linux) to find your IP
-    return 'http://192.168.18.74:8000/api'; // Replace with your IP
+    return 'http://192.168.56.1:8000/api'; // Replace with your IP
   }
 
   static Future<String?> getAuthToken() async {
