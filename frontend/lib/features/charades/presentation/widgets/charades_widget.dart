@@ -107,12 +107,6 @@ class _CharadesWidgetState extends State<CharadesWidget>
             scale: _scale,
             fade: _fade,
             palette: _palette,
-            onGuess: () {
-              context.read<CharadesBloc>().add(GuessWord());
-            },
-            onSkip: () {
-              context.read<CharadesBloc>().add(SkipWord());
-            },
           );
         }
 

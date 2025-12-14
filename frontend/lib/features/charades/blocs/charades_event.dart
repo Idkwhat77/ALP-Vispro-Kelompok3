@@ -10,10 +10,6 @@ class SelectTheme extends CharadesEvent {
 
 class StartGame extends CharadesEvent {}
 
-class GuessWord extends CharadesEvent {}
-
-class SkipWord extends CharadesEvent {}
-
 class TiltDetected extends CharadesEvent {
   final String direction;
   TiltDetected(this.direction);
