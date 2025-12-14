@@ -21,6 +21,7 @@ class CharadesGameOverWidget extends StatelessWidget {
             child: IntrinsicHeight(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Spacer(),
 
