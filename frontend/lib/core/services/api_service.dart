@@ -15,7 +15,7 @@ class ApiService {
       // For Android emulator
       return 'http://10.0.2.2:8000/api';
     } else if (Platform.isIOS) {
-      // For iOS simulator  
+      // For iOS simulator
       return 'http://localhost:8000/api';
     } else {
       // For other platforms (desktop)
@@ -87,11 +87,7 @@ class ApiService {
       }
     }
 
-    return http.post(
-      Uri.parse(url),
-      headers: headers,
-      body: json.encode(body),
-    );
+    return http.post(Uri.parse(url), headers: headers, body: json.encode(body));
   }
 
   // PUT
@@ -114,11 +110,7 @@ class ApiService {
       }
     }
 
-    return http.put(
-      Uri.parse(url),
-      headers: headers,
-      body: json.encode(body),
-    );
+    return http.put(Uri.parse(url), headers: headers, body: json.encode(body));
   }
 
   // DELETE

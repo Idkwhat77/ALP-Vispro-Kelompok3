@@ -3,22 +3,17 @@ import '../services/api_service.dart';
 import '../models/wheel.dart';
 
 class WheelRepository {
-  
   // Create new wheel entry (save spin result)
   static Future<void> saveWheelResult({
     required String result,
     required int classId,
   }) async {
     try {
-      final response = await ApiService.post(
-        '/wheels',
-        {
-          'result': result,
-          'classes_id': classId,
-        },
-        useAuth: true,
-      );
-      
+      final response = await ApiService.post('/wheels', {
+        'result': result,
+        'classes_id': classId,
+      }, useAuth: true);
+
       if (response.statusCode != 201) {
         throw Exception('Failed to save wheel result');
       }
@@ -71,7 +66,10 @@ class WheelRepository {
   // Delete wheel result
   static Future<bool> deleteWheelResult(int wheelId) async {
     try {
-      final response = await ApiService.delete('/wheels/$wheelId', useAuth: true);
+      final response = await ApiService.delete(
+        '/wheels/$wheelId',
+        useAuth: true,
+      );
       return response.statusCode == 204 || response.statusCode == 200;
     } catch (e) {
       return false;
