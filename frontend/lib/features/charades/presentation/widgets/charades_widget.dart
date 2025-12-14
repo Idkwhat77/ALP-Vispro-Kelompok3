@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../blocs/charades_bloc.dart';
 import '../../blocs/charades_event.dart';
 import '../../blocs/charades_state.dart';
-import 'charades_idle.dart';
-import 'charades_running.dart' as running_widget;
-import 'charades_running_tilt.dart' as tilt_widget;
 
+import 'charades_idle.dart';
+import 'charades_running_view.dart';
 import 'charades_game_over.dart';
 
 class CharadesWidget extends StatefulWidget {
@@ -20,108 +20,89 @@ class CharadesWidget extends StatefulWidget {
 class _CharadesWidgetState extends State<CharadesWidget>
     with SingleTickerProviderStateMixin {
   static const List<Color> _palette = [
-    Color(0xFFE21B3C),
-    Color(0xFFFFA602),
-    Color(0xFF26890C),
-    Color(0xFF1368CE),
-    Color(0xFF46178F),
+    Color(0xFFE21B3C), // red
+    Color(0xFFFFA602), // yellow
+    Color(0xFF26890C), // green
+    Color(0xFF1368CE), // blue
+    Color(0xFF46178F), // purple
   ];
 
-  late AnimationController _controller;
-  late Animation<double> _scale;
-  late Animation<double> _fade;
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+  late final Animation<double> _fade;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 350),
+      duration: const Duration(milliseconds: 300),
     );
-    _scale = Tween<double>(
-      begin: 0.85,
+
+    _scale = Tween(
+      begin: 0.92,
       end: 1.0,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    _fade = Tween<double>(
+
+    _fade = Tween(
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
   }
 
-  void _playAnim() => _controller.forward(from: 0);
+  void _play() => _controller.forward(from: 0);
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<CharadesBloc, CharadesState>(
-      listener: (context, state) async {
+      listener: (_, state) async {
         if (state is CharadesRunning) {
-          _playAnim();
-          // Force landscape
+          _play();
           await SystemChrome.setPreferredOrientations([
             DeviceOrientation.landscapeLeft,
             DeviceOrientation.landscapeRight,
           ]);
-        } else if (state is CharadesGameOver || state is CharadesIdle) {
-          // Return to normal orientations
+        }
+
+        if (state is CharadesGameOver || state is CharadesThemesLoaded) {
           await SystemChrome.setPreferredOrientations(DeviceOrientation.values);
         }
       },
       builder: (context, state) {
-        if (state is CharadesLoadingThemes) {
+        if (state is CharadesLoadingThemes || state is CharadesLoadingWords) {
           return const Center(child: CircularProgressIndicator());
         }
+
         if (state is CharadesThemesLoaded) {
           return CharadesIdle(
             themes: state.themes,
-            onSelect: (id, name) {
-              context.read<CharadesBloc>().add(SelectTheme(id, name));
-            },
-            palette: _palette,
+            palette: _palette, // ✅ FIXED
+            onSelect: (id, name) =>
+                context.read<CharadesBloc>().add(SelectTheme(id, name)),
           );
         }
+
         if (state is CharadesThemeSelected) {
-          return Center(
-            child: ElevatedButton(
-              onPressed: () {
-                context.read<CharadesBloc>().add(StartGame());
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _palette[3],
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 28,
-                  vertical: 16,
-                ),
-              ),
-              child: const Text('Start Game'),
-            ),
+          return _StartButton(
+            onTap: () => context.read<CharadesBloc>().add(StartGame()),
           );
         }
-        if (state is CharadesLoadingWords) {
-          return const Center(child: CircularProgressIndicator());
-        }
+
         if (state is CharadesRunning) {
-          return tilt_widget.CharadesRunningTiltWidget(
-            currentWord: state.currentWord,
-            score: state.score,
-            remaining: state.remaining,
-            scale: _scale,
-            fade: _fade,
-            palette: _palette,
-          );
+          return CharadesRunningView(state: state, scale: _scale, fade: _fade);
         }
 
         if (state is CharadesGameOver) {
           return CharadesGameOverWidget(
             score: state.score,
-            palette: _palette,
-            onRestart: () {
-              context.read<CharadesBloc>().add(RestartGame());
-            },
+            onRestart: () => context.read<CharadesBloc>().add(RestartGame()),
           );
         }
+
         if (state is CharadesError) {
-          return Center(child: Text('Error: ${state.message}'));
+          return Center(child: Text(state.message));
         }
+
         return const SizedBox.shrink();
       },
     );
@@ -131,5 +112,33 @@ class _CharadesWidgetState extends State<CharadesWidget>
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+}
+
+class _StartButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _StartButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SizedBox(
+        width: 260,
+        height: 56,
+        child: ElevatedButton(
+          onPressed: onTap,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF46178F),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: const Text(
+            "START GAME",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+          ),
+        ),
+      ),
+    );
   }
 }
