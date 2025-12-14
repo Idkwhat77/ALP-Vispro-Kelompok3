@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../blocs/charades_bloc.dart';
-import '../../blocs/charades_event.dart';
 import '../../blocs/charades_state.dart';
 
-class CharadesRunningView extends StatelessWidget {
+class CharadesRunningView extends StatefulWidget {
   final CharadesRunning state;
   final Animation<double> scale;
   final Animation<double> fade;
@@ -18,29 +17,93 @@ class CharadesRunningView extends StatelessWidget {
   });
 
   @override
+  State<CharadesRunningView> createState() => _CharadesRunningViewState();
+}
+
+class _CharadesRunningViewState extends State<CharadesRunningView>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _flashController;
+  late Animation<double> _flashOpacity;
+  Color _flashColor = Colors.transparent;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _flashController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+    );
+
+    _flashOpacity = Tween<double>(
+      begin: 0,
+      end: 0.85,
+    ).animate(CurvedAnimation(parent: _flashController, curve: Curves.easeOut));
+  }
+
+  @override
+  void didUpdateWidget(covariant CharadesRunningView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Detect result change
+    if (widget.state.lastResult != oldWidget.state.lastResult) {
+      if (widget.state.lastResult == CharadesResult.correct) {
+        _triggerFlash(const Color(0xFF26890C)); // green
+      } else if (widget.state.lastResult == CharadesResult.skipped) {
+        _triggerFlash(const Color(0xFFE21B3C)); // red
+      }
+    }
+  }
+
+  void _triggerFlash(Color color) async {
+    setState(() => _flashColor = color);
+    await _flashController.forward(from: 0);
+    await _flashController.reverse();
+  }
+
+  @override
+  void dispose() {
+    _flashController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _TopBar(score: state.score, remaining: state.remaining),
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
+              children: [
+                _TopBar(
+                  score: widget.state.score,
+                  remaining: widget.state.remaining,
+                ),
 
-            Expanded(
-              child: Center(
-                child: FadeTransition(
-                  opacity: fade,
-                  child: ScaleTransition(
-                    scale: scale,
-                    child: _WordCard(word: state.currentWord),
+                Expanded(
+                  child: Center(
+                    child: FadeTransition(
+                      opacity: widget.fade,
+                      child: ScaleTransition(
+                        scale: widget.scale,
+                        child: _WordCard(word: widget.state.currentWord),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
+          ),
 
-            _BottomControls(),
-          ],
-        ),
+          // FLASH OVERLAY
+          IgnorePointer(
+            child: FadeTransition(
+              opacity: _flashOpacity,
+              child: Container(color: _flashColor),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -96,7 +159,7 @@ class _StatChip extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────
-// WORD CARD (CENTER STAGE)
+// WORD CARD
 // ─────────────────────────────────────────────
 
 class _WordCard extends StatelessWidget {
@@ -128,73 +191,6 @@ class _WordCard extends StatelessWidget {
           color: Colors.white,
           fontWeight: FontWeight.w700,
           letterSpacing: 1.2,
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────
-// BOTTOM CONTROLS (THUMB ZONE)
-// ─────────────────────────────────────────────
-
-class _BottomControls extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        children: [
-          Expanded(
-            child: _ActionButton(
-              label: "PASS",
-              color: const Color(0xFFE21B3C),
-              onTap: () => context.read<CharadesBloc>().add(
-                TiltUpdated(PhoneTilt.awayFromFace),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _ActionButton(
-              label: "CORRECT",
-              color: const Color(0xFF26890C),
-              onTap: () => context.read<CharadesBloc>().add(
-                TiltUpdated(PhoneTilt.towardFace),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ActionButton({
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 56,
-      child: ElevatedButton(
-        onPressed: onTap,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
         ),
       ),
     );
