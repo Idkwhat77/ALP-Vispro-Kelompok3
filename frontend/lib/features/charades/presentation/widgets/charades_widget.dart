@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/services.dart';
 import '../../blocs/charades_bloc.dart';
 import '../../blocs/charades_event.dart';
 import '../../blocs/charades_state.dart';
 import 'charades_idle.dart';
-import 'charades_running.dart';
+import 'charades_running.dart' as running_widget;
+import 'charades_running_tilt.dart' as tilt_widget;
+
 import 'charades_game_over.dart';
 
 class CharadesWidget extends StatefulWidget {
@@ -51,32 +53,23 @@ class _CharadesWidgetState extends State<CharadesWidget>
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<CharadesBloc, CharadesState>(
-      listener: (context, state) {
-        // Play animation for running state
-        if (state is CharadesRunning) _playAnim();
-
-        // ✅ Change orientation dynamically
+      listener: (context, state) async {
         if (state is CharadesRunning) {
-          // Force landscape only while running
-          SystemChrome.setPreferredOrientations([
+          _playAnim();
+          // Force landscape
+          await SystemChrome.setPreferredOrientations([
             DeviceOrientation.landscapeLeft,
             DeviceOrientation.landscapeRight,
           ]);
-        } else {
-          // Revert to default (portrait + landscape)
-          SystemChrome.setPreferredOrientations([
-            DeviceOrientation.portraitUp,
-            DeviceOrientation.portraitDown,
-            DeviceOrientation.landscapeLeft,
-            DeviceOrientation.landscapeRight,
-          ]);
+        } else if (state is CharadesGameOver || state is CharadesIdle) {
+          // Return to normal orientations
+          await SystemChrome.setPreferredOrientations(DeviceOrientation.values);
         }
       },
       builder: (context, state) {
         if (state is CharadesLoadingThemes) {
           return const Center(child: CircularProgressIndicator());
         }
-
         if (state is CharadesThemesLoaded) {
           return CharadesIdle(
             themes: state.themes,
@@ -86,7 +79,6 @@ class _CharadesWidgetState extends State<CharadesWidget>
             palette: _palette,
           );
         }
-
         if (state is CharadesThemeSelected) {
           return Center(
             child: ElevatedButton(
@@ -104,19 +96,23 @@ class _CharadesWidgetState extends State<CharadesWidget>
             ),
           );
         }
-
         if (state is CharadesLoadingWords) {
           return const Center(child: CircularProgressIndicator());
         }
-
         if (state is CharadesRunning) {
-          return CharadesRunningWidget(
+          return tilt_widget.CharadesRunningTiltWidget(
             currentWord: state.currentWord,
             score: state.score,
             remaining: state.remaining,
             scale: _scale,
             fade: _fade,
             palette: _palette,
+            onGuess: () {
+              context.read<CharadesBloc>().add(GuessWord());
+            },
+            onSkip: () {
+              context.read<CharadesBloc>().add(SkipWord());
+            },
           );
         }
 
@@ -129,11 +125,9 @@ class _CharadesWidgetState extends State<CharadesWidget>
             },
           );
         }
-
         if (state is CharadesError) {
           return Center(child: Text('Error: ${state.message}'));
         }
-
         return const SizedBox.shrink();
       },
     );
@@ -141,13 +135,6 @@ class _CharadesWidgetState extends State<CharadesWidget>
 
   @override
   void dispose() {
-    // Reset orientation to default when widget is disposed
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
     _controller.dispose();
     super.dispose();
   }

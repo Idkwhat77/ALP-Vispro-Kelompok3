@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'word_card.dart';
 
 class CharadesRunningTiltWidget extends StatefulWidget {
   final String currentWord;
   final int score;
   final int remaining;
+  final Animation<double> scale;
+  final Animation<double> fade;
   final List<Color> palette;
-  final void Function(String direction) onTilt; // left/right
+  final VoidCallback onGuess;
+  final VoidCallback onSkip;
 
   const CharadesRunningTiltWidget({
     super.key,
     required this.currentWord,
     required this.score,
     required this.remaining,
+    required this.scale,
+    required this.fade,
     required this.palette,
-    required this.onTilt,
+    required this.onGuess,
+    required this.onSkip,
   });
 
   @override
@@ -24,36 +30,22 @@ class CharadesRunningTiltWidget extends StatefulWidget {
 }
 
 class _CharadesRunningTiltWidgetState extends State<CharadesRunningTiltWidget> {
-  DeviceOrientation _orientation = DeviceOrientation.landscapeLeft;
-  double _tilt = 0;
+  double _tiltX = 0; // left-right
+  double _tiltY = 0; // up-down
 
   @override
   void initState() {
     super.initState();
-    // Start listening to accelerometer
     accelerometerEvents.listen((event) {
-      double x = event.x;
-      double y = event.y;
-
-      double tilt;
-
-      // Adjust axis mapping based on forced landscape orientation
-      if (_orientation == DeviceOrientation.landscapeLeft) {
-        tilt = y; // tilting left/right affects y in landscapeLeft
-      } else {
-        tilt = -y; // invert for landscapeRight
-      }
-
       setState(() {
-        _tilt = tilt;
+        _tiltX = event.y; // landscape left-right
+        _tiltY = event.x; // landscape up-down
       });
 
-      // Call the callback for left/right detection
-      if (tilt > 1) {
-        widget.onTilt("right");
-      } else if (tilt < -1) {
-        widget.onTilt("left");
-      }
+      // left tilt -> guess
+      if (_tiltX > 3) widget.onGuess();
+      // right tilt -> skip
+      if (_tiltX < -3) widget.onSkip();
     });
   }
 
@@ -76,30 +68,11 @@ class _CharadesRunningTiltWidgetState extends State<CharadesRunningTiltWidget> {
           ),
         ),
         Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 25),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: widget.palette[0].withOpacity(0.12),
-                  blurRadius: 18,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Text(
-              widget.currentWord,
-              maxLines: 5,
-              overflow: TextOverflow.visible,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 60,
-                fontWeight: FontWeight.w700,
-                color: widget.palette[4],
-              ),
-            ),
+          child: WordCard(
+            word: widget.currentWord,
+            scale: widget.scale,
+            fade: widget.fade,
+            palette: widget.palette,
           ),
         ),
         Positioned(
@@ -136,14 +109,6 @@ class _CharadesRunningTiltWidgetState extends State<CharadesRunningTiltWidget> {
                 color: widget.palette[2],
               ),
             ),
-          ),
-        ),
-        Positioned(
-          bottom: 20,
-          left: 20,
-          child: Text(
-            'Tilt value: ${_tilt.toStringAsFixed(2)}',
-            style: TextStyle(color: widget.palette[0]),
           ),
         ),
       ],

@@ -1,29 +1,31 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:sensors_plus/sensors_plus.dart';
 import 'package:frontend/core/models/charades_word.dart';
 import 'package:frontend/core/repositories/charades_repository.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import 'package:frontend/core/services/api_service.dart';
 
 import 'charades_event.dart';
 import 'charades_state.dart';
 
 class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
+  // Game state
   List<CharadesWord> _words = [];
   int _index = 0;
   int _score = 0;
 
-  StreamSubscription? _gyroSub;
+  // Sensors
   StreamSubscription? _accelSub;
 
-  double _smoothedGyroY = 0;
-  double _smoothedAccelY = 0;
+  // smoothing
+  double _smoothedAccelX = 0;
 
+  // cooldown
   bool _onCooldown = false;
 
-  // These IDs should come from your app's state
-  int _classId = 1;
-  int _teacherId = 1;
+  // IDs for backend
+  final int _classId = 1;
+  final int _teacherId = 1;
 
   CharadesBloc() : super(CharadesInitial()) {
     on<LoadThemes>(_onLoadThemes);
@@ -33,13 +35,18 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
     on<RestartGame>(_onRestart);
   }
 
+  // ---------------- EVENTS ----------------
   Future<void> _onLoadThemes(
     LoadThemes event,
     Emitter<CharadesState> emit,
   ) async {
     emit(CharadesLoadingThemes());
-    final themes = await CharadesRepository.getThemes();
-    emit(CharadesThemesLoaded(themes));
+    try {
+      final themes = await CharadesRepository.getThemes();
+      emit(CharadesThemesLoaded(themes));
+    } catch (e) {
+      emit(CharadesError('Failed to load themes: $e'));
+    }
   }
 
   Future<void> _onSelectTheme(
@@ -65,6 +72,7 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
       _words = (await CharadesRepository.getWordsByTheme(
         themeState.themeId,
       )).cast<CharadesWord>();
+
       if (_words.isEmpty) {
         emit(CharadesError('No words found'));
         return;
@@ -78,11 +86,13 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
           _words[_index].word,
           _score,
           _words.length - _index - 1,
+          words: [],
         ),
       );
-      _startSensorListeners();
+
+      _startSensorListener();
     } catch (e) {
-      emit(CharadesError(e.toString()));
+      emit(CharadesError('Failed to load words: $e'));
     }
   }
 
@@ -95,38 +105,22 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
 
     if (event.direction == 'forward') {
       _score++;
-      _index++;
+    }
+    _index++;
 
-      if (_index >= _words.length) {
-        _stopSensorListeners();
-        emit(CharadesGameOver(_score));
-
-        // Send result to backend
-        await _saveGameSession();
-      } else {
-        emit(
-          CharadesRunning(
-            _words[_index].word,
-            _score,
-            _words.length - _index - 1,
-          ),
-        );
-      }
-    } else if (event.direction == 'backward') {
-      _index++;
-      if (_index >= _words.length) {
-        _stopSensorListeners();
-        emit(CharadesGameOver(_score));
-        await _saveGameSession();
-      } else {
-        emit(
-          CharadesRunning(
-            _words[_index].word,
-            _score,
-            _words.length - _index - 1,
-          ),
-        );
-      }
+    if (_index >= _words.length) {
+      _stopSensorListener();
+      emit(CharadesGameOver(_score));
+      await _saveGameSession();
+    } else {
+      emit(
+        CharadesRunning(
+          _words[_index].word,
+          _score,
+          _words.length - _index - 1,
+          words: [],
+        ),
+      );
     }
   }
 
@@ -137,27 +131,19 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
     add(LoadThemes());
   }
 
-  void _startSensorListeners() {
-    _gyroSub?.cancel();
+  // ---------------- SENSOR ----------------
+  void _startSensorListener() {
     _accelSub?.cancel();
-
-    _smoothedGyroY = 0;
-    _smoothedAccelY = 0;
+    _smoothedAccelX = 0;
     _onCooldown = false;
 
-    _gyroSub = gyroscopeEvents.listen((g) {
-      _smoothedGyroY = (_smoothedGyroY * 0.7) + (g.y * 0.3);
-    });
-
     _accelSub = accelerometerEvents.listen((a) {
-      _smoothedAccelY = (_smoothedAccelY * 0.8) + (a.y * 0.2);
+      _smoothedAccelX = (_smoothedAccelX * 0.8) + (a.x * 0.2); // smooth
       _evaluateTilt();
     });
   }
 
-  void _stopSensorListeners() {
-    _gyroSub?.cancel();
-    _gyroSub = null;
+  void _stopSensorListener() {
     _accelSub?.cancel();
     _accelSub = null;
   }
@@ -165,42 +151,42 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
   void _evaluateTilt() {
     if (_onCooldown) return;
 
-    final forward = _smoothedGyroY > 1.2 && _smoothedAccelY > 5.0;
-    final backward = _smoothedGyroY < -1.2 && _smoothedAccelY < -5.0;
+    const threshold = 5.0;
 
-    if (forward) add(TiltDetected('forward'));
-    if (backward) add(TiltDetected('backward'));
+    if (_smoothedAccelX > threshold) {
+      add(TiltDetected('forward')); // right tilt = correct guess
+    } else if (_smoothedAccelX < -threshold) {
+      add(TiltDetected('backward')); // left tilt = skip
+    }
   }
 
   void _startCooldown() {
     _onCooldown = true;
-    Future.delayed(
-      const Duration(milliseconds: 500),
-      () => _onCooldown = false,
-    );
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _onCooldown = false;
+    });
   }
 
-  // ------------------ SAVE GAME SESSION ------------------
+  // ---------------- SAVE GAME SESSION ----------------
   Future<void> _saveGameSession() async {
-    if (state is! CharadesRunning && _words.isEmpty) return;
+    if (_words.isEmpty) return;
+
+    int themeId = 1;
+    if (state is CharadesThemeSelected) {
+      themeId = (state as CharadesThemeSelected).themeId;
+    }
+
+    final body = {
+      'class_id': _classId,
+      'teacher_id': _teacherId,
+      'charades_theme_id': themeId,
+      'played_at': DateTime.now().toIso8601String(),
+      'total_guess_correct': _score,
+      'total_guess_skipped': _words.length - _score,
+    };
 
     try {
-      int themeId = 1;
-      if (state is CharadesThemeSelected) {
-        themeId = (state as CharadesThemeSelected).themeId;
-      }
-
-      final body = {
-        'class_id': _classId,
-        'teacher_id': _teacherId,
-        'charades_theme_id': themeId,
-        'played_at': DateTime.now().toIso8601String(),
-        'total_guess_correct': _score,
-        'total_guess_skipped': _words.length - _score,
-      };
-
       final response = await ApiService.post('/game-sessions', body);
-
       if (response.statusCode == 201) {
         print('✅ Game session saved successfully');
       } else {
@@ -213,7 +199,7 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
 
   @override
   Future<void> close() {
-    _stopSensorListeners();
+    _stopSensorListener();
     return super.close();
   }
 }
