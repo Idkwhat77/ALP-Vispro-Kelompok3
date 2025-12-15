@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../blocs/charades_bloc.dart';
+import '../../blocs/charades_event.dart';
 import '../../blocs/charades_state.dart';
 
 class CharadesRunningView extends StatefulWidget {
@@ -22,48 +23,35 @@ class CharadesRunningView extends StatefulWidget {
 
 class _CharadesRunningViewState extends State<CharadesRunningView>
     with SingleTickerProviderStateMixin {
-  late AnimationController _flashController;
-  late Animation<double> _flashOpacity;
-  Color _flashColor = Colors.transparent;
+  late AnimationController _timerController;
+  Color? _flashColor;
+
+  static const Duration _roundDuration = Duration(seconds: 30);
 
   @override
   void initState() {
     super.initState();
 
-    _flashController = AnimationController(
+    _timerController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 280),
-    );
-
-    _flashOpacity = Tween<double>(
-      begin: 0,
-      end: 0.85,
-    ).animate(CurvedAnimation(parent: _flashController, curve: Curves.easeOut));
+      duration: _roundDuration,
+    )..forward();
   }
 
   @override
   void didUpdateWidget(covariant CharadesRunningView oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // Detect result change
-    if (widget.state.lastResult != oldWidget.state.lastResult) {
-      if (widget.state.lastResult == CharadesResult.correct) {
-        _triggerFlash(const Color(0xFF26890C)); // green
-      } else if (widget.state.lastResult == CharadesResult.skipped) {
-        _triggerFlash(const Color(0xFFE21B3C)); // red
-      }
+    if (oldWidget.state.currentWord != widget.state.currentWord) {
+      _timerController
+        ..reset()
+        ..forward();
     }
-  }
-
-  void _triggerFlash(Color color) async {
-    setState(() => _flashColor = color);
-    await _flashController.forward(from: 0);
-    await _flashController.reverse();
   }
 
   @override
   void dispose() {
-    _flashController.dispose();
+    _timerController.dispose();
     super.dispose();
   }
 
@@ -71,39 +59,33 @@ class _CharadesRunningViewState extends State<CharadesRunningView>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          SafeArea(
-            child: Column(
-              children: [
-                _TopBar(
-                  score: widget.state.score,
-                  remaining: widget.state.remaining,
-                ),
+      body: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        color: _flashColor ?? Colors.white,
+        child: SafeArea(
+          child: Column(
+            children: [
+              _TopBar(
+                score: widget.state.score,
+                remaining: widget.state.remaining,
+              ),
 
-                Expanded(
-                  child: Center(
-                    child: FadeTransition(
-                      opacity: widget.fade,
-                      child: ScaleTransition(
-                        scale: widget.scale,
-                        child: _WordCard(word: widget.state.currentWord),
-                      ),
+              Expanded(
+                child: Center(
+                  child: FadeTransition(
+                    opacity: widget.fade,
+                    child: ScaleTransition(
+                      scale: widget.scale,
+                      child: _WordCard(word: widget.state.currentWord),
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
+              ),
 
-          // FLASH OVERLAY
-          IgnorePointer(
-            child: FadeTransition(
-              opacity: _flashOpacity,
-              child: Container(color: _flashColor),
-            ),
+              _TimerBar(controller: _timerController),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -126,8 +108,16 @@ class _TopBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _StatChip(label: "Score", value: score.toString()),
-          _StatChip(label: "Remaining", value: remaining.toString()),
+          _StatChip(
+            label: "Skor",
+            value: score.toString(),
+            color: const Color(0xFF26890C), // green
+          ),
+          _StatChip(
+            label: "Sisa Kata",
+            value: remaining.toString(),
+            color: const Color(0xFFFFA602), // yellow
+          ),
         ],
       ),
     );
@@ -137,8 +127,13 @@ class _TopBar extends StatelessWidget {
 class _StatChip extends StatelessWidget {
   final String label;
   final String value;
+  final Color color;
 
-  const _StatChip({required this.label, required this.value});
+  const _StatChip({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -146,12 +141,18 @@ class _StatChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.black),
+        border: Border.all(color: color, width: 2),
       ),
       child: Row(
         children: [
-          Text("$label: ", style: const TextStyle(fontWeight: FontWeight.w500)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w700)),
+          Text(
+            "$label: ",
+            style: TextStyle(fontWeight: FontWeight.w600, color: color),
+          ),
+          Text(
+            value,
+            style: TextStyle(fontWeight: FontWeight.w800, color: color),
+          ),
         ],
       ),
     );
@@ -191,6 +192,39 @@ class _WordCard extends StatelessWidget {
           color: Colors.white,
           fontWeight: FontWeight.w700,
           letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// TIMER BAR
+// ─────────────────────────────────────────────
+
+class _TimerBar extends StatelessWidget {
+  final AnimationController controller;
+
+  const _TimerBar({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(6),
+        child: SizedBox(
+          height: 6,
+          child: AnimatedBuilder(
+            animation: controller,
+            builder: (_, __) {
+              return LinearProgressIndicator(
+                value: controller.value,
+                backgroundColor: Colors.black12,
+                valueColor: const AlwaysStoppedAnimation(Color(0xFFE21B3C)),
+              );
+            },
+          ),
         ),
       ),
     );

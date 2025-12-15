@@ -91,7 +91,7 @@ class _ToolsetPageState extends State<ToolsetPage> {
                     child: CircleAvatar(
                       radius: 26,
                       backgroundColor: const Color(0xFF46178F),
-                      backgroundImage:
+                      foregroundImage:
                           (_teacher?.pictureUrl != null &&
                               _teacher!.pictureUrl!.isNotEmpty)
                           ? NetworkImage(_teacher!.pictureUrl!)

@@ -35,7 +35,7 @@ class CharadesGameOverWidget extends StatelessWidget {
                 const SizedBox(height: 12),
 
                 Text(
-                  "Score: $score",
+                  "Skor: $score",
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 22,
