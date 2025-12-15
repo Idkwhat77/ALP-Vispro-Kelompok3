@@ -4,8 +4,17 @@ import 'package:flutter/foundation.dart';
 
 class ProfileAvatar extends StatelessWidget {
   final String? photoUrl;
+  final File? localImage;
+  final VoidCallback? onEditTap;
+  final bool isLoading;
   
-  const ProfileAvatar({super.key, this.photoUrl});
+  const ProfileAvatar({
+    super.key, 
+    this.photoUrl,
+    this.localImage,
+    this.onEditTap,
+    this.isLoading = false,
+  });
 
   // Fix the URL to use correct host based on platform
   String? _getFixedUrl(String? url) {
@@ -28,29 +37,73 @@ class ProfileAvatar extends StatelessWidget {
     return fixedUrl;
   }
 
+  ImageProvider? _getImageProvider() {
+    // Priority: local image > network image
+    if (localImage != null) {
+      return FileImage(localImage!);
+    }
+    
+    final fixedUrl = _getFixedUrl(photoUrl);
+    if (fixedUrl != null && fixedUrl.isNotEmpty) {
+      return NetworkImage(fixedUrl);
+    }
+    
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final fixedUrl = _getFixedUrl(photoUrl);
+    final imageProvider = _getImageProvider();
     
     return Center(
-      child: CircleAvatar(
-        radius: 80,
-        backgroundColor: const Color(0xFF46178F),
-        backgroundImage: (fixedUrl != null && fixedUrl.isNotEmpty)
-            ? NetworkImage(fixedUrl)
-            : null,
-        onBackgroundImageError: (fixedUrl != null && fixedUrl.isNotEmpty)
-            ? (_, __) {
-                debugPrint('Failed to load profile image: $fixedUrl');
-              }
-            : null,
-        child: (fixedUrl == null || fixedUrl.isEmpty)
-            ? const Icon(
-                Icons.person,
-                size: 95,
-                color: Colors.white,
-              )
-            : null,
+      child: Stack(
+        children: [
+          CircleAvatar(
+            radius: 80,
+            backgroundColor: const Color(0xFF46178F),
+            backgroundImage: imageProvider,
+            onBackgroundImageError: (fixedUrl != null && fixedUrl.isNotEmpty && localImage == null)
+                ? (_, __) {
+                    debugPrint('Failed to load profile image: $fixedUrl');
+                  }
+                : null,
+            child: isLoading
+                ? const CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 3,
+                  )
+                : (imageProvider == null)
+                    ? const Icon(
+                        Icons.person,
+                        size: 95,
+                        color: Colors.white,
+                      )
+                    : null,
+          ),
+          // Edit icon button
+          if (onEditTap != null)
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: GestureDetector(
+                onTap: isLoading ? null : onEditTap,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF46178F),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3),
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../widgets/profile_avatar.dart';
 import '../widgets/profile_info.dart';
 import '../widgets/logout_button.dart';
@@ -54,6 +56,80 @@ class ProfilePage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _showImageSourceDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(bottom: 16),
+                child: Text(
+                  "Pilih Sumber Gambar",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: Color(0xFF46178F)),
+                title: const Text("Kamera"),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(context, ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: Color(0xFF46178F)),
+                title: const Text("Galeri"),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(context, ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(BuildContext context, ImageSource source) async {
+    final picker = ImagePicker();
+    try {
+      final pickedFile = await picker.pickImage(
+        source: source,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+      
+      if (pickedFile != null) {
+        final imageFile = File(pickedFile.path);
+        if (context.mounted) {
+          context.read<ProfileBloc>().add(UpdateProfilePicture(imageFile));
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal mengambil gambar: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -125,8 +201,13 @@ class ProfilePage extends StatelessWidget {
                     children: [
                       const SizedBox(height: 40),
 
-                      // FOTO PROFIL
-                      ProfileAvatar(photoUrl: state.photoUrl),
+                      // FOTO PROFIL with edit icon
+                      ProfileAvatar(
+                        photoUrl: state.photoUrl,
+                        localImage: state.localImage,
+                        isLoading: state.status == ProfileStatus.uploading,
+                        onEditTap: () => _showImageSourceDialog(context),
+                      ),
 
                       const SizedBox(height: 32),
 
@@ -174,3 +255,4 @@ class ProfilePage extends StatelessWidget {
     );
   }
 }
+

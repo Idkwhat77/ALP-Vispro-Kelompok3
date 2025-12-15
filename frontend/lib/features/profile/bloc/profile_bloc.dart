@@ -8,6 +8,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   ProfileBloc() : super(const ProfileState()) {
     on<LoadProfile>(_onLoadProfile);
     on<LogoutPressed>(_onLogout);
+    on<UpdateProfilePicture>(_onUpdateProfilePicture);
   }
 
   Future<void> _onLoadProfile(LoadProfile event, Emitter<ProfileState> emit) async {
@@ -24,6 +25,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
           name: teacher.fullname,
           email: teacher.email,
           photoUrl: teacher.pictureUrl,
+          teacherId: teacher.teacherId,
         ));
       } else {
         emit(state.copyWith(
@@ -34,6 +36,46 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     } catch (e) {
       emit(state.copyWith(
         status: ProfileStatus.error,
+        errorMessage: 'Error: $e',
+      ));
+    }
+  }
+
+  Future<void> _onUpdateProfilePicture(UpdateProfilePicture event, Emitter<ProfileState> emit) async {
+    if (state.teacherId == null) {
+      emit(state.copyWith(
+        status: ProfileStatus.error,
+        errorMessage: 'Teacher ID not found',
+      ));
+      return;
+    }
+
+    emit(state.copyWith(
+      status: ProfileStatus.uploading,
+      localImage: event.imageFile,
+    ));
+    
+    try {
+      final result = await AuthRepository.updateProfilePicture(
+        state.teacherId!,
+        event.imageFile,
+      );
+      
+      if (result != null && result['success'] == true) {
+        final newPhotoUrl = result['data']?['picture_url'] as String?;
+        emit(state.copyWith(
+          status: ProfileStatus.loaded,
+          photoUrl: newPhotoUrl ?? state.photoUrl,
+        ));
+      } else {
+        emit(state.copyWith(
+          status: ProfileStatus.loaded,
+          errorMessage: 'Failed to update profile picture',
+        ));
+      }
+    } catch (e) {
+      emit(state.copyWith(
+        status: ProfileStatus.loaded,
         errorMessage: 'Error: $e',
       ));
     }
