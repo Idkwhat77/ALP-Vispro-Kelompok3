@@ -81,7 +81,7 @@ class _ToolsetPageState extends State<ToolsetPage> {
         body: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
               child: Row(
                 children: [
                   GestureDetector(
