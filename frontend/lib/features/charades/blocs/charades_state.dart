@@ -1,7 +1,16 @@
 import 'package:frontend/core/models/charades_theme.dart';
 import 'package:frontend/core/models/charades_word.dart';
 
-// Base state
+// ─────────────────────────────────────────────
+// RESULT SIGNAL FOR UI FEEDBACK
+// ─────────────────────────────────────────────
+
+enum CharadesResult { correct, skipped }
+
+// ─────────────────────────────────────────────
+// BASE STATE
+// ─────────────────────────────────────────────
+
 abstract class CharadesState {}
 
 // Initial
@@ -26,18 +35,25 @@ class CharadesThemeSelected extends CharadesState {
 // Loading words
 class CharadesLoadingWords extends CharadesState {}
 
-// Game running
+// ─────────────────────────────────────────────
+// GAME RUNNING
+// ─────────────────────────────────────────────
+
 class CharadesRunning extends CharadesState {
   final String currentWord;
   final int score;
   final int remaining;
   final List<CharadesWord> words;
 
+  /// NEW: tells UI what just happened
+  final CharadesResult? lastResult;
+
   CharadesRunning(
     this.currentWord,
     this.score,
     this.remaining, {
     required this.words,
+    this.lastResult,
   });
 
   CharadesRunning copyWith({
@@ -45,17 +61,22 @@ class CharadesRunning extends CharadesState {
     int? score,
     int? remaining,
     List<CharadesWord>? words,
+    CharadesResult? lastResult,
   }) {
     return CharadesRunning(
       currentWord ?? this.currentWord,
       score ?? this.score,
       remaining ?? this.remaining,
       words: words ?? this.words,
+      lastResult: lastResult,
     );
   }
 }
 
-// Game over
+// ─────────────────────────────────────────────
+// GAME OVER
+// ─────────────────────────────────────────────
+
 class CharadesGameOver extends CharadesState {
   final int score;
   CharadesGameOver(this.score);

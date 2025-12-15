@@ -1,18 +1,29 @@
 abstract class CharadesEvent {}
 
+/// ---------------- UI EVENTS ----------------
+
 class LoadThemes extends CharadesEvent {}
 
 class SelectTheme extends CharadesEvent {
   final int themeId;
   final String themeName;
+
   SelectTheme(this.themeId, this.themeName);
 }
 
 class StartGame extends CharadesEvent {}
 
-class TiltDetected extends CharadesEvent {
-  final String direction;
-  TiltDetected(this.direction);
+class RestartGame extends CharadesEvent {}
+
+/// ---------------- SENSOR EVENTS ----------------
+
+enum PhoneTilt {
+  neutral,
+  towardFace, // guess
+  awayFromFace, // skip
 }
 
-class RestartGame extends CharadesEvent {}
+class TiltUpdated extends CharadesEvent {
+  final PhoneTilt tilt;
+  TiltUpdated(this.tilt);
+}
