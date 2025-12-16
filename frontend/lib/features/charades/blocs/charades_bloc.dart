@@ -140,25 +140,36 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
 
       final double x = event.x;
       final double y = event.y;
+      final double z = event.z;
 
       // Normalize tilt depending on landscape direction
       double forwardValue;
+      double tiltDirection;
+
+      forwardValue = x;
 
       if (orientation == DeviceOrientation.landscapeLeft) {
-        forwardValue = -x;
+        tiltDirection = z;
       } else {
-        forwardValue = x;
+        tiltDirection = -z;
       }
 
       PhoneTilt tilt = PhoneTilt.neutral;
+      //harus ada lagi logic yang deteksi kalau hpnya di neutral, tidak langsung dikasih neutral.
 
-      if (forwardValue > 6.0) {
-        tilt = PhoneTilt.towardFace;
-      } else if (forwardValue < -6.0) {
-        tilt = PhoneTilt.awayFromFace;
-      }
-
+      //harus ada 2 parameter, yang pertama forwardValue sebagai threshold untuk deteksi tilt sejauh mana
+      //kemudian parameter kedua dan yang kedua itu untuk mendeteksi tiltny ake arah mana
+      //sekarang yang dideteksi itu threshold, bukan arah tilt kemana
+      //Accelerometer itu orientasi
+      //Gyroscope itu kecepatan
+      if (forwardValue > 4.0) {
+        if (tiltDirection > 4.0) {
+          tilt = PhoneTilt.towardFace;
+        } else if (tiltDirection > 4.0) {
+          tilt = PhoneTilt.awayFromFace;
+        }
       add(TiltUpdated(tilt));
+      }
     });
   }
 
