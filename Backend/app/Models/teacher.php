@@ -25,7 +25,11 @@ class Teacher extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'picture',
+        'picture_mime',
     ];
+
+    protected $appends = ['picture_url'];
 
     protected $primaryKey = 'teacher_id';
     public $incrementing = true;
@@ -50,6 +54,14 @@ class Teacher extends Authenticatable
     public function gameSessions(): HasMany
     {
         return $this->hasMany(GameSession::class, 'teacher_id', 'teacher_id');
+    }
+
+    /**
+     * Get the URL for the teacher's picture.
+     */
+    public function getPictureUrlAttribute(): ?string
+    {
+        return url('api/teachers/' . $this->teacher_id . '/picture');
     }
 }
 
