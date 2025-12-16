@@ -26,14 +26,12 @@ class CharadesRunning extends CharadesState {
   final String currentWord;
   final int score;
   final int remaining;
-  final List<CharadesWord> words;
   final CharadesResult? lastResult;
 
   CharadesRunning(
     this.currentWord,
     this.score,
     this.remaining, {
-    required this.words,
     this.lastResult,
   });
 }
