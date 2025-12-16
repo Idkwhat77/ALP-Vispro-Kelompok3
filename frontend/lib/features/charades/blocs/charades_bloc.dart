@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
@@ -11,17 +10,31 @@ import 'charades_event.dart';
 import 'charades_state.dart';
 
 class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
-  // ---------------- GAME STATE ----------------
+  // ───────────────── GAME STATE ─────────────────
 
   List<CharadesWord> _words = [];
   int _index = 0;
   int _score = 0;
 
-  // ---------------- SENSOR ----------------
+  int? _selectedThemeId;
+  String? _selectedThemeName;
+
+  // ───────────────── SENSOR STATE ─────────────────
 
   StreamSubscription? _accelSub;
-  bool _cooldown = false;
+
   PhoneTilt _lastTilt = PhoneTilt.neutral;
+  bool _locked = false;
+
+  double _lastZ = 0;
+  DateTime _lastTime = DateTime.now();
+
+  // ───────────────── TUNING CONSTANTS ─────────────────
+
+  static const double tiltThreshold = 6.0;
+  static const double neutralThreshold = 2.0;
+  static const double speedThreshold = 0.015;
+  static const int cooldownMs = 600;
 
   CharadesBloc() : super(CharadesInitial()) {
     on<LoadThemes>(_onLoadThemes);
@@ -31,21 +44,26 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
     on<RestartGame>(_onRestart);
   }
 
-  // ================= EVENTS =================
+  // ───────────────── EVENTS ─────────────────
 
   Future<void> _onLoadThemes(
     LoadThemes event,
     Emitter<CharadesState> emit,
   ) async {
     emit(CharadesLoadingThemes());
-    final themes = await CharadesRepository.getThemes();
-    emit(CharadesThemesLoaded(themes));
+
+    try {
+      final themes = await CharadesRepository.getThemes();
+      emit(CharadesThemesLoaded(themes));
+    } catch (e) {
+      emit(CharadesError(e.toString()));
+    }
   }
 
-  Future<void> _onSelectTheme(
-    SelectTheme event,
-    Emitter<CharadesState> emit,
-  ) async {
+  void _onSelectTheme(SelectTheme event, Emitter<CharadesState> emit) {
+    _selectedThemeId = event.themeId;
+    _selectedThemeName = event.themeName;
+
     emit(CharadesThemeSelected(event.themeId, event.themeName));
   }
 
@@ -53,16 +71,15 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
     StartGame event,
     Emitter<CharadesState> emit,
   ) async {
-    if (state is! CharadesThemeSelected) {
+    if (_selectedThemeId == null) {
       emit(CharadesError('Theme not selected'));
       return;
     }
 
-    final theme = state as CharadesThemeSelected;
     emit(CharadesLoadingWords());
 
     try {
-      _words = await CharadesRepository.getWordsByTheme(theme.themeId);
+      _words = await CharadesRepository.getWordsByTheme(_selectedThemeId!);
 
       if (_words.isEmpty) {
         emit(CharadesError('No words found'));
@@ -71,14 +88,17 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
 
       _index = 0;
       _score = 0;
+      _locked = false;
       _lastTilt = PhoneTilt.neutral;
+      _lastZ = 0;
+      _lastTime = DateTime.now();
 
       emit(
         CharadesRunning(
           _words[_index].word,
           _score,
           _words.length - 1,
-          words: [],
+          words: const [],
         ),
       );
 
@@ -89,20 +109,18 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
   }
 
   void _onTiltUpdated(TiltUpdated event, Emitter<CharadesState> emit) {
-    if (_cooldown || state is! CharadesRunning) return;
+    if (state is! CharadesRunning) return;
+    if (_locked) return;
+    if (event.tilt == PhoneTilt.neutral) return;
 
-    if (event.tilt == _lastTilt) return;
+    _locked = true;
 
-    _lastTilt = event.tilt;
-    _cooldown = true;
+    final result = event.tilt == PhoneTilt.towardFace
+        ? CharadesResult.correct
+        : CharadesResult.skipped;
 
-    CharadesResult result;
-
-    if (event.tilt == PhoneTilt.towardFace) {
+    if (result == CharadesResult.correct) {
       _score++;
-      result = CharadesResult.correct;
-    } else {
-      result = CharadesResult.skipped;
     }
 
     _index++;
@@ -118,40 +136,56 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
         _words[_index].word,
         _score,
         _words.length - _index - 1,
-        words: [],
-        lastResult: result, // 🔥 THIS IS KEY
+        words: const [],
+        lastResult: result,
       ),
     );
 
-    Future.delayed(const Duration(milliseconds: 700), () {
-      _cooldown = false;
-    });
+    Future.delayed(
+      const Duration(milliseconds: cooldownMs),
+      () => _locked = false,
+    );
   }
 
   void _onRestart(RestartGame event, Emitter<CharadesState> emit) {
     _stopSensors();
+
+    _words = [];
+    _index = 0;
+    _score = 0;
+    _selectedThemeId = null;
+    _selectedThemeName = null;
+
     add(LoadThemes());
   }
 
-  // ================= SENSOR LOGIC =================
+  // ───────────────── SENSOR LOGIC ─────────────────
 
   void _startSensorListener() {
     _accelSub?.cancel();
 
     _accelSub = accelerometerEvents.listen((event) {
-      // Landscape mode → X axis represents forward/back tilt
-      final double forward = event.x;
+      final now = DateTime.now();
+      final dt = now.difference(_lastTime).inMilliseconds;
+      final dz = event.z - _lastZ;
 
-      PhoneTilt tilt = PhoneTilt.neutral;
+      final speed = dz.abs() / math.max(dt, 1);
 
-      if (forward > 7.0) {
-        tilt = PhoneTilt.towardFace; // ✅ guessed correctly
-      } else if (forward < -7.0) {
-        tilt = PhoneTilt.awayFromFace; // ⏭ skip
+      _lastZ = event.z;
+      _lastTime = now;
+
+      // Re-arm when neutral
+      if (event.z.abs() < neutralThreshold) {
+        _lastTilt = PhoneTilt.neutral;
+        return;
       }
 
-      if (tilt != PhoneTilt.neutral) {
-        add(TiltUpdated(tilt));
+      if (_locked || speed < speedThreshold) return;
+
+      if (event.z > tiltThreshold) {
+        add(TiltUpdated(PhoneTilt.towardFace));
+      } else if (event.z < -tiltThreshold) {
+        add(TiltUpdated(PhoneTilt.awayFromFace));
       }
     });
   }
@@ -159,7 +193,7 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
   void _stopSensors() {
     _accelSub?.cancel();
     _accelSub = null;
-    _cooldown = false;
+    _locked = false;
     _lastTilt = PhoneTilt.neutral;
   }
 

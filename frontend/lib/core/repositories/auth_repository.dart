@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import '../services/api_service.dart';
 import '../models/teacher.dart';
 
@@ -48,6 +49,57 @@ class AuthRepository {
       return null;
     } catch (e) {
       print('Get current user error: $e');
+      return null;
+    }
+  }
+
+  // Update profile picture
+  static Future<Map<String, dynamic>?> updateProfilePicture(int teacherId, File imageFile) async {
+    try {
+      // Read file and convert to base64
+      final bytes = await imageFile.readAsBytes();
+      final base64Image = base64Encode(bytes);
+      
+      // Determine mime type from extension
+      final extension = imageFile.path.split('.').last.toLowerCase();
+      String mimeType;
+      switch (extension) {
+        case 'png':
+          mimeType = 'image/png';
+          break;
+        case 'gif':
+          mimeType = 'image/gif';
+          break;
+        case 'webp':
+          mimeType = 'image/webp';
+          break;
+        default:
+          mimeType = 'image/jpeg';
+      }
+      
+      // Create data URI format
+      final dataUri = 'data:$mimeType;base64,$base64Image';
+      
+      final response = await ApiService.put(
+        '/teachers/$teacherId',
+        {
+          'picture_base64': dataUri,
+        },
+        useAuth: true,
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return {
+          'success': true,
+          'data': data['data'],
+        };
+      } else {
+        print('Update profile picture failed: ${response.statusCode} - ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Update profile picture error: $e');
       return null;
     }
   }

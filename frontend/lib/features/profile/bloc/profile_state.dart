@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
+import 'dart:io';
 
-enum ProfileStatus { initial, loading, loaded, error }
+enum ProfileStatus { initial, loading, loaded, error, uploading }
 
 class ProfileState extends Equatable {
   final ProfileStatus status;
@@ -10,6 +11,8 @@ class ProfileState extends Equatable {
   final String email;
   final String? photoUrl;
   final String? errorMessage;
+  final File? localImage;
+  final int? teacherId;
 
   const ProfileState({
     this.status = ProfileStatus.initial,
@@ -19,6 +22,8 @@ class ProfileState extends Equatable {
     this.email = '',
     this.photoUrl,
     this.errorMessage,
+    this.localImage,
+    this.teacherId,
   });
 
   ProfileState copyWith({
@@ -28,7 +33,9 @@ class ProfileState extends Equatable {
     String? specialization,
     String? email,
     String? photoUrl,
-    String? errorMessage, 
+    String? errorMessage,
+    File? localImage,
+    int? teacherId,
   }) {
     return ProfileState(
       status: status ?? this.status,
@@ -38,9 +45,11 @@ class ProfileState extends Equatable {
       email: email ?? this.email,
       photoUrl: photoUrl ?? this.photoUrl,
       errorMessage: errorMessage ?? this.errorMessage,
+      localImage: localImage ?? this.localImage,
+      teacherId: teacherId ?? this.teacherId,
     );
   }
 
   @override
-  List<Object?> get props => [status, name, username, specialization, email, photoUrl, errorMessage];
+  List<Object?> get props => [status, name, username, specialization, email, photoUrl, errorMessage, localImage, teacherId];
 }
