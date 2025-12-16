@@ -202,17 +202,24 @@ class _ToolsetPageState extends State<ToolsetPage> {
                           child: GestureDetector(
                             onTap: () {
                               if (toolset.name == "Quiz (Coming Soon)") {
-                                ScaffoldMessenger.of(context).showSnackBar(
+                                ScaffoldMessenger.of(context)
+                                  ..hideCurrentSnackBar()
+                                  ..showSnackBar(
                                   SnackBar(
-                                    content: const Text(
-                                      "Fitur Quiz akan segera hadir!",
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        color: Colors.white,
+                                    duration: Duration(seconds: 2),
+                                    backgroundColor: Color(0xFFFFA602),
+                                    content: Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 14),
+                                      child: Text(
+                                        "Fitur Quiz akan segera hadir!",
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                       ),
                                     ),
-                                    backgroundColor: Colors.orange,
-                                  ),
+                                  )
                                 );
                                 return;
                               }
@@ -228,76 +235,90 @@ class _ToolsetPageState extends State<ToolsetPage> {
                               }
                             },
                             child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 250),
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 30,
+                            duration: const Duration(milliseconds: 250),
+                            margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 30),
+                            decoration: BoxDecoration(
+                              color: isSelected ? Colors.blue.shade50 : Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: isSelected ? Colors.blue : Colors.grey.shade300,
+                                width: isSelected ? 2.4 : 1,
                               ),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? Colors.blue.shade50
-                                    : Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? Colors.blue
-                                      : Colors.grey.shade300,
-                                  width: isSelected ? 2.4 : 1,
+                              boxShadow: [
+                                BoxShadow(
+                                  blurRadius: isSelected ? 14 : 6,
+                                  offset: const Offset(0, 4),
+                                  color: Colors.black12,
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    blurRadius: isSelected ? 14 : 6,
-                                    offset: const Offset(0, 4),
-                                    color: Colors.black12,
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(18),
-                                    child: Image.asset(
-                                      toolset.name == "SpinWheel"
-                                          ? 'assets/images/spinwheel.jpg'
-                                          : toolset.name == "Charades"
-                                          ? 'assets/images/charades.jpg'
-                                          : 'assets/images/quiz_coming_soon.jpg',
-                                      fit: BoxFit.contain,
+                              ],
+                            ),
+
+                            // ===== STACK =====
+                            child: Stack(
+                              children: [
+                                // ===== MAIN CONTENT =====
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.all(18),
+                                      child: Image.asset(
+                                        toolset.name == "SpinWheel"
+                                            ? 'assets/images/spinwheel.jpg'
+                                            : toolset.name == "Charades"
+                                                ? 'assets/images/charades.jpg'
+                                                : 'assets/images/quiz_coming_soon.jpg',
+                                        fit: BoxFit.contain,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    toolset.name,
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w600,
+                                    const SizedBox(height: 10),
+                                    Text(
+                                      toolset.name,
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 20,
+                                    const SizedBox(height: 6),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                                      child: Text(
+                                        toolset.name == "SpinWheel"
+                                            ? "Roda acak untuk memilih siswa."
+                                            : toolset.name == "Charades"
+                                                ? "Game tebak kata seru!"
+                                                : "Segera hadir!",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: toolset.name == "Quiz (Coming Soon)"
+                                              ? Colors.orange
+                                              : Colors.grey.shade600,
+                                        ),
+                                      ),
                                     ),
-                                    child: Text(
-                                      toolset.name == "SpinWheel"
-                                          ? "Roda acak untuk memilih siswa."
-                                          : toolset.name == "Charades"
-                                          ? "Game tebak kata seru!"
-                                          : "Segera hadir!",
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color:
-                                            toolset.name == "Quiz (Coming Soon)"
-                                            ? Colors.orange
-                                            : Colors.grey.shade600,
+                                  ],
+                                ),
+
+                                // ===== SHIMMER OVERLAY (COMING SOON) =====
+                                if (toolset.name == "Quiz (Coming Soon)")
+                                  Positioned.fill(
+                                    child: AbsorbPointer(
+                                      child: Shimmer.fromColors(
+                                        baseColor: Colors.grey.shade300.withOpacity(0.6),
+                                        highlightColor: Colors.grey.shade100.withOpacity(0.9),
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey.shade300.withOpacity(0.7),
+                                            borderRadius: BorderRadius.circular(20),
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ],
-                              ),
+                              ],
                             ),
+                          ),
                           ),
                         );
                       },
