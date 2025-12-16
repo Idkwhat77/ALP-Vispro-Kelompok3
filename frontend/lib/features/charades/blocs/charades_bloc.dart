@@ -91,14 +91,18 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
   void _onTiltUpdated(TiltUpdated event, Emitter<CharadesState> emit) {
     if (_cooldown || state is! CharadesRunning) return;
 
-    // Prevent instant firing when entering landscape
-    if (event.tilt == PhoneTilt.neutral || event.tilt == _lastTilt) return;
+    if (event.tilt == _lastTilt) return;
 
     _lastTilt = event.tilt;
     _cooldown = true;
 
+    CharadesResult result;
+
     if (event.tilt == PhoneTilt.towardFace) {
       _score++;
+      result = CharadesResult.correct;
+    } else {
+      result = CharadesResult.skipped;
     }
 
     _index++;
@@ -115,6 +119,7 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
         _score,
         _words.length - _index - 1,
         words: [],
+        lastResult: result, // 🔥 THIS IS KEY
       ),
     );
 
@@ -133,32 +138,21 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
   void _startSensorListener() {
     _accelSub?.cancel();
 
-    _accelSub = accelerometerEvents.listen((event) async {
-      final orientation = await SystemChrome.latestStyle == null
-          ? DeviceOrientation.landscapeLeft
-          : DeviceOrientation.landscapeLeft;
-
-      final double x = event.x;
-      final double y = event.y;
-
-      // Normalize tilt depending on landscape direction
-      double forwardValue;
-
-      if (orientation == DeviceOrientation.landscapeLeft) {
-        forwardValue = -x;
-      } else {
-        forwardValue = x;
-      }
+    _accelSub = accelerometerEvents.listen((event) {
+      // Landscape mode → X axis represents forward/back tilt
+      final double forward = event.x;
 
       PhoneTilt tilt = PhoneTilt.neutral;
 
-      if (forwardValue > 6.0) {
-        tilt = PhoneTilt.towardFace;
-      } else if (forwardValue < -6.0) {
-        tilt = PhoneTilt.awayFromFace;
+      if (forward > 7.0) {
+        tilt = PhoneTilt.towardFace; // ✅ guessed correctly
+      } else if (forward < -7.0) {
+        tilt = PhoneTilt.awayFromFace; // ⏭ skip
       }
 
-      add(TiltUpdated(tilt));
+      if (tilt != PhoneTilt.neutral) {
+        add(TiltUpdated(tilt));
+      }
     });
   }
 
