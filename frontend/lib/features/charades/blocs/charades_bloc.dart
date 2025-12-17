@@ -3,9 +3,11 @@ import 'dart:math' as math;
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/models/charades_word.dart';
 import '../../../core/repositories/charades_repository.dart';
+import '../../../core/repositories/game_session_repository.dart';
 import 'charades_event.dart';
 import 'charades_state.dart';
 
@@ -15,6 +17,7 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
   List<CharadesWord> _words = [];
   int _index = 0;
   int _score = 0;
+  int _skipped = 0;
 
   int? _selectedThemeId;
 
@@ -89,6 +92,7 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
 
       _index = 0;
       _score = 0;
+      _skipped = 0;
       _locked = false;
       _lastZ = 0;
       _lastTime = DateTime.now();
@@ -112,7 +116,11 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
         ? CharadesResult.correct
         : CharadesResult.skipped;
 
-    if (result == CharadesResult.correct) _score++;
+    if (result == CharadesResult.correct) {
+      _score++;
+    } else {
+      _skipped++;
+    }
 
     _advanceWord(result, emit);
 
@@ -124,6 +132,7 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
 
   void _onWordTimeExpired(WordTimeExpired event, Emitter<CharadesState> emit) {
     if (state is! CharadesRunning) return;
+    _skipped++;
     _advanceWord(CharadesResult.skipped, emit);
   }
 
@@ -134,6 +143,7 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
     _words = [];
     _index = 0;
     _score = 0;
+    _skipped = 0;
     _selectedThemeId = null;
 
     add(LoadThemes());
@@ -147,6 +157,7 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
     if (_index >= _words.length) {
       _stopSensors();
       _stopRoundTimer();
+      _saveGameSession(); // <-- ADD THIS LINE
       emit(CharadesGameOver(_score));
       return;
     }
@@ -161,6 +172,26 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
     );
 
     _startRoundTimer();
+  }
+
+  Future<void> _saveGameSession() async {
+    if (_selectedThemeId == null) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final teacherId = prefs.getInt('teacher_id') ?? 1;
+      final classId = prefs.getInt('selected_class_id') ?? 1;
+
+      await GameSessionRepository.createGameSession(
+        classId: classId,
+        teacherId: teacherId,
+        charadesThemeId: _selectedThemeId!,
+        totalCorrect: _score,
+        totalSkipped: _skipped,
+      );
+    } catch (e) {
+      print('Error saving game session: $e');
+    }
   }
 
   CharadesRunning _buildRunningState() {
@@ -200,7 +231,6 @@ class CharadesBloc extends Bloc<CharadesEvent, CharadesState> {
       _lastZ = event.z;
       _lastTime = now;
 
-      if (event.z.abs() < neutralThreshold) return;
       if (_locked || speed < speedThreshold) return;
 
       if (event.z > tiltThreshold) {
