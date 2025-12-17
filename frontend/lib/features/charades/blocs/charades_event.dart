@@ -15,11 +15,15 @@ class StartGame extends CharadesEvent {}
 
 class RestartGame extends CharadesEvent {}
 
+/// ---------------- TIMER EVENT ----------------
+
+class WordTimeExpired extends CharadesEvent {}
+
 /// ---------------- SENSOR EVENTS ----------------
 
 enum PhoneTilt {
   neutral,
-  towardFace, // guess
+  towardFace, // correct
   awayFromFace, // skip
 }
 

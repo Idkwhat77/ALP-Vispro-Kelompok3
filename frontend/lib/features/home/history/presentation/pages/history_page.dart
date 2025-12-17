@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../core/repositories/game_session_repository.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({Key? key}) : super(key: key);
@@ -8,27 +9,13 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-  // ─────────────── Hardcoded mock data ───────────────
-  final List<Map<String, dynamic>> sessions = [
-    {
-      'charadesTheme': {'name': 'Animals'},
-      'played_at': '2025-12-15 10:30',
-      'total_guess_correct': 7,
-      'total_guess_skipped': 2,
-    },
-    {
-      'charadesTheme': {'name': 'Movies'},
-      'played_at': '2025-12-14 14:20',
-      'total_guess_correct': 5,
-      'total_guess_skipped': 3,
-    },
-    {
-      'charadesTheme': {'name': 'Fruits'},
-      'played_at': '2025-12-13 16:45',
-      'total_guess_correct': 8,
-      'total_guess_skipped': 1,
-    },
-  ];
+  late Future<List<Map<String, dynamic>>> _sessionsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _sessionsFuture = GameSessionRepository.fetchSessions();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,25 +38,43 @@ class _HistoryPageState extends State<HistoryPage> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: _buildBody(),
+          child: FutureBuilder<List<Map<String, dynamic>>>(
+            future: _sessionsFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (snapshot.hasError) {
+                return const Center(
+                  child: Text(
+                    "Failed to load history",
+                    style: TextStyle(fontSize: 16),
+                  ),
+                );
+              }
+
+              final sessions = snapshot.data ?? [];
+
+              if (sessions.isEmpty) {
+                return const Center(
+                  child: Text(
+                    "No games played yet",
+                    style: TextStyle(fontSize: 16),
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                itemCount: sessions.length,
+                itemBuilder: (context, index) {
+                  return _HistoryCard(session: sessions[index]);
+                },
+              );
+            },
+          ),
         ),
       ),
-    );
-  }
-
-  Widget _buildBody() {
-    if (sessions.isEmpty) {
-      return const Center(
-        child: Text("No games played yet", style: TextStyle(fontSize: 16)),
-      );
-    }
-
-    return ListView.builder(
-      itemCount: sessions.length,
-      itemBuilder: (context, index) {
-        final session = sessions[index];
-        return _HistoryCard(session: session);
-      },
     );
   }
 }
@@ -137,7 +142,11 @@ class _SessionInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeName = session['charadesTheme']?['name'] ?? 'Charades';
+    final themeName =
+        session['charades_theme']?['name'] ??
+        session['charadesTheme']?['name'] ??
+        'Charades';
+
     final playedAt = session['played_at']?.toString() ?? 'Unknown Date';
     final correct = session['total_guess_correct'] ?? 0;
     final skipped = session['total_guess_skipped'] ?? 0;
